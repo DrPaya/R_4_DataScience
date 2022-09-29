@@ -1,0 +1,1048 @@
+---
+title: "Programing in R, Fundamentals of Data Science" 
+output: html_notebook
+---
+### Introduction to integers, objects, and factors
+```{r}
+
+x <- 1
+x ##This is an automatic print
+b <- 1:20  ##Creates a series of integers
+c <- 0:6
+class(c) ##Shows you what class c is
+as.numeric(c)  ##Changes the list of integers into mnumeric values
+as.logical(c)  ##Changes the list of numerics into logical values of True and False
+d <- list(1, "a", TRUE, 1+4i)  #Creates a list of different classes within same vector
+print(d)
+e <- matrix(1:6, nrow = 2, ncol = 3)  #This is one way of creating a matrix of two rows and three columns
+
+x <- 1:3
+y <- 10:12
+cbind(x,y) ##This utilized the above vectors for x and y and combines them on columns
+rbind(x, y) #Does the same thing as column bind, but for rows [both are matrix functions]
+f <- factor(c("yes", "yes", "no", "yes", "no"))  #creates the factor
+f  #Prints the factor, the levels as well
+table(f) ##shows you the levels, and how many of each
+unclass(f)  ##Prints out how R considers the factor- as a simplified vector of integers
+f <- factor(c("yes", "yes", "no", "yes", "no"),
+    levels = c("yes", "no"))  ##This changes the baseline to the elements attributes
+```
+
+### Reading tables, data.frames, and NA values
+```{r}
+is.na(x) ##is used to determine if there are missing values within a vector. This will happen if more than one class in present.
+    # read.table() ## is used to read data for a data table. 
+    # read.csv() ##Does the same as read.table for csv files
+g <- data.frame(foo = 1:4, bar = c(T, T, F, F))
+g   #This prints out a data frame with column headers foo and bar, and gives row.names as default 1, 2, 3, 4
+h <- 1:3
+names(h) <- c("fucka", "aya", "ducka") ##This attaches names to a vector/object
+i <- c("a", "b", "c", "d", "e", "a", "b")
+i[3] ##based on the vector i above, we subset the third element of i
+i[2:4] ## sub-setting a sequence of elements
+i[i > "c"]  ##alphabet is sequential, so we can subset logically for anything greater than "c"
+j <- i > "c"  ##Logical index that will show true of false whether elements in the vector area greater than "c"
+j  ##prints
+k <- list(shit = 1:4, face = 0.6) ## creating a simple list of length 2
+k[1] ##Single bracket subset of the first elements with it's title
+k[[1]] ## double bracket subsets only the element, not the title
+k$face  ## extracts by name, just the information related to the second element, i.e. face
+
+l <- c(1, 2, NA, 4, 5, NA, 7)
+bad <- is.na(l)
+l[!bad]  ##This expression takes a vector or data frame, and removes the NA using the is.na function
+
+na.omit(read.csv("Respiration_2012_combined_demo.csv")) ##Real example that works with existing data with added NA to challenge expression
+
+m <- 1:4; n <- 5:8  ## below are the examples of how two processes can run simultaneously, i.e. vectorized operations
+m + n
+m * n
+m >= 2
+m/n
+
+```
+### Cleaning and summarizing data.frames
+```{r}
+data <- na.omit(read.csv("hw1_data.csv")) ## assigning the imported csv file to the string "data", where NA is ommitted for the entire table
+colMeans(data)  ## taking the mean of each of the columns of the "data" table. colMeans(x) does not work with tables containing blanks.
+
+table <- read.csv("hw1_data.csv")  ##Imports the data frame
+table[is.na(table)] <- ""   ##identifies anything that is NA, and the expression assigns ""
+
+table <- na.omit(read.csv("hw1_data.csv"))  #Imports the data table/data frame
+subs <- filter(table, Ozone > 31, Temp > 90)  ##assigns subs to a filtered "table" dataset, filtering for two column headers
+str(subs)  ##summarizes new data
+colMeans(subs)  ##takes the mean of subs
+
+table <- na.omit(read.csv("hw1_data.csv")) ##assigns table to the data frame
+subs <- filter(table, Month == 5)  ## assigns subs to a subset via the filter from dplyr
+subs <- arrange(subs, Ozone)  ##arranges subs in ascending order
+head(select(subs, Ozone), 3)  ##shows the top values for subs, column ozone, and returns three elements
+tail(select(subs, Ozone), 3)  ##shows the bottom values for subs, column ozone, and returns three elements
+
+table <- read.csv("hw1_data.csv")   
+table [is.na(table)] <- ""  ## This is a way of removing all NA without removing any rows from the data frame.
+table
+
+thing <- read.csv("name") ##for removing na without removing the complete row. 
+thing[is.na(thing)] <- ""
+
+```
+
+### Control Structures and Conditional Statements
+```{r}
+x <- c("a", "b", "c", "d")  ##This is an example of a control structure demonstrating "for". Used to create loops.
+for(i in 1:4) {
+      print(x[i])
+}
+
+count <- 0
+while(count < 10) {   ##This is an example of a control structure, loop called while. It's infinite so be sure to have a condition where the loop ends or the code will never stop.
+      print(count)
+      count <- count+1
+}
+
+z <- 5
+while(z >= 1 && z <= 10) { ## an example of more than one condition in a single test. 
+      print(z)
+        coin <- rbinom(1,1,0.5)  #This expression assigns a random binomial to "coin" where when it's 1, then add, else subtract 1 from z.
+      if(coin ==1) {
+          z <- z+1
+      } else {
+          z <- z-1
+      }
+}
+```
+
+###Introduction to functions
+```{r}
+add2 <- function(x, y) {  ## Basic function that adds 2 values. Function directive has two values, so needs two arguments.
+      x + y
+}
+add2(2, 3) ##uses the function above to perform the function
+
+above10 <- function(x) {
+    numbers <- x > 10   ## logical statement that figures out which elements are larger than 10. 10 is arbitrary.
+    x[numbers]  ## sub -setting the vector x with a logical vector that are larger than 10, otherwise empty vector
+}
+
+mydata <- rnorm(100)
+sd(x = mydata, na.rm = FALSE) ##the standard deviation of 100 random normal variables where NA values are FALSE
+
+      #search()  ## this opens up the list of environments in order
+```
+
+### Finding column mean from a data.table function
+```{r}
+data <- read.csv("hw1_data.csv")
+columnmean <- function(x, removeNA = TRUE) {  ##assigning the function to columnmean where x is your input, and an additional argument to remove NA.
+      nc <- ncol(x) ## assigning the number and order of columns to arbitrary string nc (ncol is a function that counts column number)
+      means <- numeric(nc)  ##assigning numeric values of our nc vector to match the number of columns. This is an exmpty vector that will be filled in.
+      for(i in 1:nc) {   ##using a for loop to move through the columns. integer vector starting at 1 and ending at the number of columns.
+          means[i] <- mean(x[, i], na.rm = removeNA) ##for loop to each mean of i which is a function of x bracket i. Removal of NA can also be passed to the mean function. 
+      }
+      means
+}
+columnmean(data)
+```
+### Finding column median from a data.table function
+```{r}
+data <- read.csv("hw1_data.csv")
+columnmedian <- function(x, removeNA = TRUE) {  ##assigning the function to columnmedian where x is your input, and an additional argument to remove NA.
+    nc <- ncol(x) ## assigning the number and order of columns to arbitrary string nc (ncol is a function that counts column number)
+    medians <- numeric(nc)  ##assigning numeric values of our nc vector to match the number of columns. This is an empty vector that will be filled in.
+    for(i in 1:nc) {   ##using a for loop to move through the columns. integer vector starting at 1 and ending at the number of columns.
+       medians[i] <- median(x[, i], na.rm = removeNA) ##for loop to each median of i which is a function of x bracket i. Removal of NA can also be passed to the median function. 
+    }
+    medians
+}
+columnmedian(data)
+```
+
+###Importing and collating multiple .csv files from one folder
+
+```{r}
+library(data.table)
+
+combinedata <- function( id = 1:x) {  ##This is a function for combining multiple csv's for data analysis, where the number of combined files can be defined in the second argument. 
+  fileslist <- list.files(".../R Tutorials/Programming_in_R/specdata", full.names = TRUE) ##Not actual file path.
+  masterdata <- data.frame()   ## means the output will be a new data frame
+  x = sequence(length(fileslist))  ##This defines how many files are in a folder, where it's looking at the sequence and length of the list.files assigned to fileslist
+  for (i in id) {
+    masterdata <- rbind(masterdata, na.omit(read.csv(fileslist[i]), header = TRUE))  ##This is omitting the NA rows in each data set before binding all rows. 
+    print(masterdata)
+  }  ## You can choose to import all files in a folder (specdata in this case) by entering x as the second argument. 
+}
+
+```
+
+
+### Dates, calculating dates, &/or
+
+```{r}
+x <- as.Date("2022-08-30")
+x
+unclass(x)  ##Gives you the date in reference to the stored internal date of 1970-01-01
+
+x <- Sys.time()  ## descsribes the current time on the system you are working in. 
+x
+
+datestring <-  c("January 10, 2012 10:40", "December 9, 2011 9:10")  ## Dates written in character string format. To be turned into time objects.
+x <- strptime(datestring, "%B %d, %Y %H:%M")  ## strptime function works here- passed a format string. % Bhe month, %d the day, %Y 4-digit year, and then hours and minutes. 
+x
+
+x <- as.Date("2022-08-30")  ##defining the data and assigning it to x
+y <- strptime("9 Jan 2021 11:34:21", "%d $b $y %H:%M:%S")  ## assigning a POSIXlt formatted date and time to y
+x <- as.POSIXlt(x) ##changing date into POSIXlt format for calculations.
+x-y
+
+x <- as.Date("2012-03-01")
+y <- as.Date("2012-02-28")
+x-y   ## a calculation for the time difference between two days. Making sure to change strings to date objects
+
+x <- as.POSIXct("2012-10-25 01:00:00")
+y <- as.POSIXct("2012-10-25 09:00:00", tz = "GMT")  ## Calculating the difference in hours (integer) based on a defined time zone. Default is system zone vs. defined ones. GMT vs. PT in this case. 
+y-x
+
+
+FALSE & c(TRUE, TRUE, TRUE) ## The & (and) operator recycles FALSE across each concatenated element within (), therefore making each TRUE logic false. 
+TRUE | c(TRUE, FALSE, FALSE) ## The | (or) operator looks at the expression, and if either are true, then true, otherwise false. 
+## The & operator is evaluated before the |
+
+
+##____________________
+
+d1 <- date()  ##assigns today's data to d1
+class(d1)  ##happens to be a character
+
+d2 <- Sys.Date()
+class(d2)  ##sys.date is now a date variable, which can be easier to use. 
+format(d2, "%a %b %d")
+# %d = day as number (0-31), %a = abbreviated weekday, %A = unabbreviated weekday, %m = month (00-12), %b = abbreviated month, %b = unabbreviated month, %y = 2 digit year, %Y = four digit year. 
+
+library(lubridate); ymd("20140108") ##will always look for year, month and date when lubridate package is installed. 
+mdy("08/04/2022")
+ymd_hms("2022-09-28 16:34:22")
+
+```
+
+### apply, sapply, lapply and splits
+
+```{r}
+x <- list (a = 1:10, b = rnorm(10,2))  ## an example of lapply, where the two arguments, x and the function (mean) are applied to each item in the list. 
+lapply (x, mean) ## applies to x, the mean to everything listed above in a, as well as b.
+
+
+x <- matrix(rnorm(200), 20, 10) ## 200 random normally distributed variables between around 0, 20 rows, and 10 columns. Dimension 1 is rows, and dimension 2 is columns. This is what the margin is "collapsing"
+apply (x, 2, mean) ##This preserves the 10 columns, and takes the average for each column. 
+## rnorm(n observations, mean of normal distribution, standard deviation) - this expression has three arguments. 
+apply (x, 1, mean) ##This preserves the 20 rows, and takes the average for each row
+
+
+    library(datasets) ##loads a generic dataset avaialbel in r as a library. We will use this for a data.frame splitting example below.
+    head(airquality)  ##shows the airquality dataset from the above library.
+
+
+    s <- split(airquality, airquality$Month)  ##splitting the dataset airquality by the month - a good way to get summary data. Everything is CASE SENSITIVE!!!!
+    lapply(s, function(x) colMeans(x[, c("Ozone", "Solar.R", "Wind")])) ##This applies an anonymous function x of the column means of the defined columns. Temperature is being left out arbitrarily
+    ## This is a way to take summary data, column means in this example, grouped/split by month.
+
+
+    s <- split(airquality, airquality$Month)  ##splitting the dataset airquality by the month - a good way to get summary data. Everything is CASE SENSITIVE!!!!
+    sapply(s, function(x) colMeans(x[, c("Ozone", "Solar.R", "Wind")], na.rm = TRUE)) ##This turns the output into a matrix, and cleans up the summary data. na.rm removes na, so you have better presentation. 
+
+
+
+library(datasets)
+    data(iris)  ##loads the r library of datasets, one of which is iris. More info can be found by running ?iris
+s <- split(iris, iris$Species)  ##splitting the dataset iris by the species - a good way to get summary data. Everything is CASE SENSITIVE!!!!
+sapply(s, function(x) colMeans(x[, c("Sepal.Length", "Sepal.Width")], na.rm = TRUE)) ##finds the means of the listed columns
+    
+apply(iris[, 1:4], 2, mean)##calculates the mean of columns 1 through 4 of a data.frame 
+
+
+data(mtcars)
+head(mtcars)
+s <- split(mtcars, mtcars$cyl)  ##splitting the dataset mtcars by the # of cylinders - a good way to get summary data. Everything is CASE SENSITIVE!!!!
+sapply(s, function(x) colMeans(x[, c("mpg", "disp")], na.rm = TRUE)) ##Long way of calculating for average mpg by cylinders
+
+##This is the short way of performing the same calculation
+with(mtcars, tapply(mpg, cyl, mean))  ## for tapply, tapply( list, index = factor or filterable variable, function or function name, in this case mean)
+## The with() looks for with( data, expr) where the data is a data.frame environment, and expr is the expression, whjich in this case was tapply)
+tapply(mtcars$mpg, mtcars$cyl, mean)  ##another way of writing the above expression. 
+ 
+```
+
+### <<- Operator (values to objects) and matrix/vector caching
+```{r}
+##Matrix example
+makeCacheMatrix <- function( x = matrix()) {
+      inv <- NULL  ##Assigns inv initially as empty
+      set <- function (y) {
+            x <<- y  ## the double assignment operator can be thought of as, x is assigned once (parent), and <<- can give it a second assignment (child)
+            inv <<- NULL
+      }
+      get <- function() x  ##This function defaults to an un-described function, and refers to x, where x = a matrix and prints it
+      setinverse <- function(inverse) inv <<- inverse   
+      ##This sets the elements of the inverse matrix, where the function is an inverse, and that inverse function is assigned to inv
+      getinverse <- function() inv ##This function defaults to an un-described function, and refers to inv, which pulls from the inverse function
+      list(set = set, get = get, 
+              setinverse = setinverse,
+              getinverse = getinverse)
+} ##The makeCacheMatrix has three nested functions that can be used- get, setinverse, and getinverse. 
+
+
+
+cacheinverse <- function (x, ...) {  ## This function pulls from the cache of matrices, looks for x, and x is the matrix created using makeCacheMatrix
+      inv <- x$getinverse()
+      if(!is.null(inv)) {
+          message("getting cached data")
+          return(inv)
+      }
+      invertedMatrix <- x$get()
+      inv <- solve(invertedMatrix, ...)
+      x$setinverse(inv)
+      inv
+}
+
+##To test that we are storing/caching a matrix, we can run the following:
+MatrixExample <- makeCacheMatrix(matrix(1:4, 2, 2))
+MatrixExample$get()  ##This is used to pull/print the matrix for review
+
+cacheinverse(MatrixExample)  ##This tests the inverse of the matrix we just cached
+
+## running it again should show us the messaage "getting cached data" 
+cacheinverse(MatrixExample)
+
+##Mean example
+makeVector <- function(x = numeric()) {
+      m <- NULL
+      set <- function(y) {
+          x <<- y
+          m <<- NULL
+      }
+      get <- function() x
+      setmean <- function(mean) m <<- mean
+      getmean <- function() m
+      list(set = set, get = get, setmean = setmean, getmean = getmean)
+}
+
+cachemean <- function(x, ...) {
+    m <- x$getmean()
+    if(!is.null(m)) {
+        message("getting cached data")
+        return(m)
+    }
+    data <- x$get()
+    m <- mean(data, ...)
+    x$setmean(m)
+    m
+}
+
+testmean <- makeVector(c(1,2,3,4,5)) #a vector of numeric values
+cachemean(testmean) ##takes the mean, and stores it in the cache.
+cachemean(testmean) ##should return the mean, plus the message. 
+```
+
+
+## Simulation, str and more... 
+
+###Simulating random numbers, and str()
+```{r}
+## using str to look at the arguments of functions.
+x <- rnorm(100, 2, 4)
+summary(x) ## str is like summary, but not. 
+str(x) #This will return a one line output, where x is a numeric vector, it contains 100 elements, and the first five numbers in this vector.
+str(rnorm)  #Will give you an output which shows the arguments for the rnorm function. 
+
+##Different example looking at some standard dataframes
+library(datasets)
+head(airquality) ##One of the standard datasets
+str(airquality)  #gives you an output that shows 153 objects, and 6 variables
+
+##str can also be used on subsets of a dataframe to gather information on characteristics of the dataframe.
+s <- split(airquality, airquality$Month) 
+str(s) ##Cals str on the subset (the split) of the airquality dataset, focus on month. 
+
+##Examples of returns for qnorm, pnorm...
+x <- rnorm(10, 20, 2)
+x
+## when generating random numbers, important to set.seed
+set.seed(1) ##The seed can be any integer
+rnorm(5)
+rnorm(5)
+set.seed(1) ##This allows you to reproduce random numbers you generated above. 
+rnorm(5)
+
+
+##Generating poisson distribution data as opposed to normal
+rpois(10,1) ##here, you have n numbers returned, and the second argument is lambda (can be thought of as mean)
+rpois(10,2)
+rpois(10,20)
+
+ppois(2, 2) ## this looks at the cumulative distribution. 
+
+```
+
+###Simulating linear models
+
+```{r}
+set.seed(20)
+x <- rnorm(100) ##defining the inputs or the independant variable x
+e <-rnorm(100, 0, 2)
+y <- 0.5 + 2*x + e ##This is the linear equation with the intercept set at 0.5, and the slope is 2
+summary (y)
+plot(x, y) ##plots the relationship between x and y, which is quite linear
+
+## Binomial example- such as gender, or preferences
+set.seed(10) ##This example below is a linear model looking at something like gender, which is binomial in nature, not numeric. 
+x <- rbinom(100, 1, 0.5)  ##creates a vector of 100 binomial outputs, where the "size" is limited to 0 and 1, and the probability of 1 or 0 is set to 50%. The "size" can be changed to any integer
+e <- rnorm(100,0,2)
+y <- 0.5 + 2*x + e  ## same linear model where the intercept is set to 0.5, and the slope is 2
+summary(y)
+plot(x, y)
+
+##Example where the data has a poisson distribution, and not a "normal" one. 
+set.seed(1)
+x <- rnorm(100)
+log.mu <- 0.5 + 0.3*x  ##This is the linear model for the log of mu, where mu is the mean
+y <- rpois(100, exp(log.mu))  ##here, the exp is taking e^x on in this instance, e^(log.mu) and e is Euler's number
+summary(y)
+plot(x,y)
+
+```
+
+###Random Sampling
+```{r}
+set.seed(2)
+sample(1:10, 4)
+sample(letters, 5)
+sample(1:10) ##a permutation
+sample(1:10, replace = TRUE) ##This allows for random sampling of numbers, and it can now repeat some. 
+
+```
+
+### Taking a First Look at DATA and Cleaning it
+
+```{r}
+ls() ##Shows you all of the variables in your "workspace", which is everything that was assigned 
+class() ## tells you whether you have a vector, data.frame, matrix, etc...
+dim()  ## shows you how many 1) rows, and 2) columns you have in your data.frame. The dimensions.
+nrow()  ##Shows the number of rows in a data.frame
+ncol() ##shows the number of columns in a data.frame
+object.size() ##shows you the number of bytes being used by this data.frame
+names()  ##gives you a return of the column names of the data.frame
+head(x, 10)  ##shows the first few rows of a data.frame so that not all observations are returned. The second expression can be used to choose the number of rows you wish to see, in this case, 10 rows.
+tail()  ##can be used in the same way as head, except it looks at the bottom of the data.frame, 
+summary() ##gives you a brief overview of each column's data. 
+table(data.frame$column_name)  ##In this expression, you can get summary data from a column containing categorical variables. 
+
+##_________________________________________________
+##Using the Iris dataset
+
+head(iris, n = 3)  #heads and returns the first three rows. 
+summary(iris)  ##one form of summary
+str(iris)  ##Another form of summary, describes the object class for each column. 
+quantile(iris$Sepal.Length, na.rm= TRUE)  ## a way of breaking up data per column into quantiles. 
+quantile(iris$Sepal.Length, probs = c(0.5, 0.8, 0.9))  ##quantile data with defined percentages
+
+##_________________________________________________
+
+table(iris$Petal.Length, useNA="ifany")  ##summarizes number of observations per variable for column of choice. 
+table(iris$Petal.Length, iris$Petal.Width)  ##returns a two dimension matrix with the number of observations for both width and length variables. \
+
+##_________________________________________________
+      sum(is.na(iris$Sepal.Length))  ##This checks for whether or not there are any NA in the selected column. 
+      all(iris$Sepal.Length > 0)  #This checks for whether there may be bad data, i.e. a length less than zero. A way of preliminary filtering through data. 
+
+##_________________________________________________ 
+      
+table(iris$Sepal.Length %in% c("4.5", "4.6"))  ##sets a limit on a column variable and looks at the "percent in" of the defined values in the column's data, and returns how many observations meet that criteria. 
+
+##Row sub-setting by desired values - two column example, but can limit to one. 
+      iris[iris$Sepal.Length %in% c("4.5", "4.6", "4.7") & iris$Petal.Length %in% c("1.4"),]
+
+##_________________________________________________
+      
+## XTabs 
+data(UCBAdmissions)
+berkely = as.data.frame(UCBAdmissions)
+summary(berkely)
+    xt <- xtabs(Freq ~ Gender + Admit, data= berkely) ##This table will return the frequencies, which is listed first, and then the relationship between gender, and admittance. 
+    xt
+    
+ ##_________________________________________________   
+        xt2 <- xtabs(Freq ~ ., data= berkely)  ## here, the frequency is presented for "." all of the other variables. This returns a long list of 2d tables. 
+        xt2
+        ftable(xt2)  ##This flattens out the list of tables from the expression xt2, which would otherwise be a list of multiple tables. 
+
+##_________________________________________________
+##Sequencing data 
+s1 <- seq(1,10, by=2) ; s1  ##defined sequence where you have the min (1) and the max (10), and then the inger spacing between the sequence. 
+s2 <- seq(1,10, length=3); s2  ##defined sequence where the length of the sequence returns is three, i.e. three output values in the sequence. 
+x<- c(1, 3, 8, 25, 100); seq(along = x)
+        
+##_________________________________________________
+##Common Data transformations
+abs(x) #absolute value
+sqrt(x) #square root
+ceiling(x) #The ceiling of 3.457 is 4
+floor(x) #The floor of 3.457 is 3
+round(x, digits = n)  #round up the value x, with n= number of decimal points. 
+signif(x, digits = n) #Rounds up, and shortens the quantity to n number of numbers AND decmials. 
+cos(x); sin(x);  tan(x)
+log(x) #natural log transformation
+log2(x); log10(x) ##examples of other common logs. 
+exp(x) #is e^x
+```
+
+###Data ReShaping 
+```{r}
+install.packages("reshape2") ##needed here for melt of a data.frame.
+library(reshape2)
+head(mtcars) 
+mtcars$carname <- rownames(mtcars)  ##inserts a new row, which is the carname row, and that row takes it's information from the rownames (which are usually numeric)
+head(mtcars)
+carMelt <- melt(mtcars, id=c("carname", "gear", "cyl"), measure.vars = c("mpg", "hp"))  ##the daata.frame mtcars is melted or condensed. The ID's that return column data are defined in id. The measure.vars are those variables that will melt the remainder of the values and return a taller, skinnier dataset where mpg's are listed as a category, and the value is that mpg, and further down the data.frame, hp will be be visible. 
+head(carMelt, n=3)
+tail(carMelt, n=5)
+
+##________________________________
+##dcasting and reshaping data, cont...
+
+clyData <- dcast(carMelt, cyl ~ variable, mean)  ##uses dcast to reshape the data.frame where cyl or cylinders is listed as the first data in each row, and the remaining columns (variable) will be presented as a mean. 
+clyData
+
+##________________________________
+head(InsectSprays)
+tapply(InsectSprays$count, InsectSprays$spray, sum) ## A way os summarizing, where count is the row, and spray is the column head, the sum of sprays. 
+
+##Plyr package can perform similar functions ion terms of summing data from data.frame (See above). 
+ddply(InsectSprays, .(spray), summarize, sum=sum(count))
+```
+
+###Manipulating data.frames using dplyr
+
+```{r}
+str(mtcars)
+name(mtcars)  ##returns column names
+head(select(mtcars, wt:carname)) ##example of SELECT function, which requires first the data.frame, and then the columns by name you want selected in sequence. 
+
+
+weight <- filter(mtcars, wt > 3.0) ##example of the FILTER function, which requires the data.frame first, then the condition, in this case all values in column wt greater than 3.
+head(weight, n=5)
+
+weight <- filter(mtcars, wt > 3.0 & cyl == 4) ##conditional returns of column data, using filter, can be combined using "&"
+head(weight, n=10)
+
+##reorders rows based on the values of the column- ARRANGE
+mtcars <- arrange(mtcars, mpg) ##ARRANGE here the data.frame based on ascending order by miles per gallon (mpg)
+head(mtcars, n=15)
+mtcars <- arrange(mtcars, desc(mpg))  ##the same function, but in descending order. 
+
+
+mtcars <- rename(mtcars, weight = wt, horse = hp) ##RENAME function in dplyr, where the new column name is first, followed by "= existing column name"
+head(mtcars)
+
+mtcars <- mutate(mtcars, mpgDev = mpg-mean(mpg, na.rm = TRUE))  ##this inserts a new column in your data.frame named mpgDev, and it performs the listed calculation, ommitting na. 
+head(select(mtcars, carname, mpg, mpgDev))
+```
+
+###Merging Data
+
+```{r}
+if(!file.exists("./data")) {dir.create("./data")}
+fileURL1 = "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv"
+fileURL2 = "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FEDSTATS_Country.csv"
+download.file(fileURL1, destfile ="./data/gdp190.csv", method = "curl")
+download.file(fileURL2, destfile ="./data/education.csv", method = "curl")
+gdp <- read.csv("./data/gdp190.csv"); education <- read.csv("./data/education.csv")
+head(gdp, n= 20) 
+head(education, n = 20)
+      names(gdp) 
+      gdp2 <- rename(gdp, Countrycode = X, country = X.2, milDollars = X.3, rank = Gross.domestic.product.2012) ##This is useful for a rename, but not for the merge function. Headding returns the original column names, x etc...
+      names(education)
+
+            mergeData = merge(gdp2, education, by.x="CountryCode", by.y="CountryCode") ##merges the two datasets based on the shared Column id'd, which in this case were three letter country codes. 
+            head(mergeData, n=20)
+
+                  mergeData$rank <- as.integer(mergeData$rank)  ##turns the ranking from character into an integer. 
+                  arrange(mergeData, desc(rank)) ##descending order of ranks
+                  head(mergeData, n=20)
+                       merge2<- filter(mergeData, Income.Group == "High income: OECD") ##Filters data in income.group columns to data of interest, "high OECD" and then a summary returns the mean rank, =32.97
+                       summary(merge2)
+                            merge3<- filter(mergeData, Income.Group == "High income: nonOECD") ##Filters data in income.group columns to data of interest, "high nonOECD" and then a summary returns the mean rank, =91.91
+                           summary(merge3)
+
+                        merge3 <- quantile(mergeData, )
+
+                        
+                        
+intersect(names(gdp), names(education)) ##will show you which column names are shared between two or more datasets. There are no shared names in this example. 
+```
+
+
+#Cleaning and Tidying DATA
+
+```{r}
+getwd()  ##for determining the working directory
+setwd("../") ##moves up one level of the working directory. 
+
+file.exists("directoryName")  ##looks for whether this directory exists, if not...
+dir.create("directoryName") ##will then create the directory. 
+
+if(!file.exists("data")) { ##checks whether file/directory exists, and if not, it creates one.
+  dir.create("data")
+}
+
+```
+
+###Importing/Downloading Files from the Internet
+
+```{r}
+#how to download a file from the internet and store in a local file. 
+fileURL <- "https://data.baltimorecity.gov/api/views/dz54-2aru/rows.csv?accessType=DOWNLOAD"
+download.file(fileURL, destfile = "./data/cameras.csv", method = "curl")  ##curl is essential because https is a protected file. 
+list.files("./data")
+dateDownloaded <- date()
+dateDownloaded  ##assigns the date to the downloaded file. 
+
+```
+
+###Importing/Downloading XML Files
+
+```{r}
+library(XML)
+fileURL <- "http://www.w3schools.com/xml/simple.xml"
+doc <- xmlTreeParse(fileURL, useInternal = TRUE)
+rootNode <- xmlRoot(doc)
+xmlName(rootNode) ## Consider installing XML package. 
+
+rootNode[[1]]
+xmlSApply(rootNode, xmlValue)  ##gets every value for every tagged element. 
+
+#Example code #2
+library(XML)
+fileURL <- "http://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Frestaurants.xml"
+doc <- xmlTreeParse(fileURL, useInternal = TRUE)
+rootNode <- xmlRoot(doc)
+xmlName(rootNode)
+
+xmlSApply(rootNode, xmlValue)
+write.table(rootNode, "rootNode.csv")
+```
+
+###Reading and importing JSON files as data.frame
+
+```{r}
+library(jsonlite)
+jsonData <- fromJSON("https://api.github.con/users/jtleek/repos")
+names(jsonData)
+
+##Can drill down further into the data. 
+names(jsonData$Owner)
+names(jsondata$Owner$login)
+
+myjson <- toJSON(iris, pretty = TRUE)  ##converts data.frame into a JSON file output. 
+cat(myjson)  ##prints out
+
+```
+
+
+###Connecting to mySQL database
+```{r}
+#"RMySQL" is pacgage needed to pull from SQL databases. 
+ucscDb <- dbConnect(MySQL(), user = "genome", host = "genome-mysql.cse.ucsc.edu")
+result <- dbGetQuery(ucscDb, "show databases;"); dbDisconnect(ucscDb);
+head(result)  ## this returns the list of databases (SQL), which house any number of tables, or data.frames. 
+##In order to select further...
+hg19 <- dbConnect(MySQL(), user= "genome", db= "hg19", host= "genome-mysql.cse.ucsc.edu")
+allTables <- dbListTables(hg19)
+length(allTables) ##returns the number of tables in the database. Can be a lot. 
+allTables[1:10]  ## a way to view selected tables, which are 1 through 10 in the hg19 database. 
+dbListFields(hg19, "affyU133Plus2")  ##This is a view of a specific table, and it returns the "fields" or column heads. 
+dbGetQuery(hg19, "select count(*) from affyU133Plus2")  ##sends a SQL language request to the database asking for a records (or row) count for the affy table. 
+
+affyData <- dbReadTable(hg19, "affyU133Plus2")  ##This calls the data.frame from the SQL database. Method for calling one table at a time. 
+head(affyData) 
+dbDisconnect(hg19) ##This is essential because it closes the connection to the mySQL server. 
+```
+
+###Reading and working with HDF5 file types
+
+```{r}
+source("http://bioconductor.org/biocLite.R")  ##initial loading of the hdf5 file type into R
+biocLite("rhdf5")
+
+library(hdf5)
+created = h5createFile("example.h5")
+created
+## bioconductor.org/install in order to work with data type. For another time. 
+```
+
+###Data scrapping from the WEB
+
+```{r}
+con = url("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en") ## establishes a connection to the referenced url
+htmlCode = readLines(con) ##readlines command reads data from the connection
+close(con)  ##be sure to close the connection after use. 
+htmlCode
+
+##Alternative avenue
+library(XML)
+url<- ("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en")
+html <- htmlTreeParse(url, useInternalNodes = T)
+
+xpathSApply(html, "//title", xmlValue)
+
+```
+
+###Subsetting Fundamentals- A Review
+
+```{r}
+library(datasets) ##loads a generic dataset avaialbel in r as a library. We will use this for a data.frame splitting example below.
+    head(airquality)  ##shows the airquality dataset from the above library.
+    
+
+    x <- airquality
+    x[,1]  ## Subsetting the first column
+    x[, "Ozone"] ##Subsetting the first column by name
+    x[1,]  ##subsetting the first row of a data.frame
+    
+    na.omit(x[x$Ozone <= 20 & x$Temp > 70,])  ## subsetting data.frame x using two conditions or arguments, where Ozone is less than or equal to 20, and temperature is greater than 70, where NA is ommitted. 
+    x[which(x$Ozone <= 20 & x$Temp > 70),]  ##This returns the same as above, only more data is included in the subset. 
+    
+```
+
+###Sorting Fundamentals- A Review
+
+```{r}
+library(datasets)
+    head(airquality)
+##Sorting the values in different ways
+        sort(x$Solar.R)  ##Sorts the data in Solar.R column
+        sort(x$Solar.R, decreasing = TRUE)  ##Performs the same sort, but in decreasing order. 
+        x[order(x$Ozone),]  ##orders the data based on ascending order of Ozone data. 
+        x[order(x$Ozone, x$Month),] ##Will order the data first by Ozone, and then by Month. 
+        ##plyr is a package that is useful for sorting. Use help. 
+```
+
+###Editing text variables
+
+```{r}
+##Using previous example data for GDP...
+fileURL1 = "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv"
+download.file(fileURL1, destfile ="./data/gdp190.csv", method = "curl")
+gdp <- read.csv("./data/gdp190.csv")
+names(gdp) 
+      gdp2 <- rename(gdp, Countrycode = X, country = X.2, milDollars = X.3, rank = Gross.domestic.product.2012) ##This is useful for a rename, but not for the merge function. Headding returns the original column names, x etc...
+      
+tolower(names(gdp2))  ##can be used to avoid mistakes by lowering the cases of all of the column names. 
+splitname <-  strsplit(names(gdp2), "\\.") ##This splits apart a name based on a defined element, in this instance periods, "\\."
+splitname[[3]]
+
+
+sub("_", "", names(gdp2))  ##this removes the underscore from column names and replaced them with "" blank. 
+##example 
+testName <- "This_is_a_test"
+sub("_", "", testName) ##will return only a single underscore removed. 
+gsub("_", "", testName) ##will remove them all. 
+
+
+grep("") 
+table(grepl("integer, number of character", data.frame$column)) ##will present theu number of instances the integer appears within the column of choosing. 
+
+substr("Ronald McDonald", 1, 6) ##subsets the string between the first and fifth character + one space
+
+. 
+```
+
+###Regular Expressions - strings and patterns
+
+```{r}
+# ^I Think    will match strings that begin with "I think"
+# morning$    will match strings that end in the word morning. 
+# [Pp][Ee][Nn][Ii][Ss]      will match any form of penis, no matter which words are capitalized. 
+# ^[Ii] am     combining different character classes. 
+# ^[0-9][a-zA-z] This will look for any set of numbers (0-9), as well as any letters in the alphabet thanks to a-z. 
+# .           (period) refers to ANY character. 9.11 could be 9-11, 9/11, 9:11 etc...
+# flood|fire  will return one or the other. |   represents or
+# ?           represents anything optional
+# (.*)        will look for any string/character, any number of time that are within parentheses.
+#  +([a-zA-Z]+) +\1 +  space then one or more characters then space then a copy of first expressio. "blah blah" or "so so"
+```
+
+
+###Idaho Housing Example- Value above 1mil
+```{r}
+fileURL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv?accessType=DOWNLOAD"
+download.file(fileURL, destfile = "./data/idahoHousing.csv", method = "curl")  ##curl is essential because https is a protected file. 
+list.files("./data")
+dateDownloaded <- date()
+dateDownloaded
+    idaho <- read.csv(".../R Tutorials/Programming_in_R/data/idahoHousing.csv") ##Not actual file path. 
+    head(idaho)
+    #s <- split(idaho, idaho$VAL)  ##splitting the dataset idaho by the value - a good way to get summary data. 
+    
+    sapply(s, function(x) sum(x[, "VAL"], na.rm = TRUE)) ##careful here- it sums all of the codes, which means that you have to divide by the code value to get count. 
+    
+    idVAL <- subset(idaho, VAL == 24)  ##subset of the dataset for code24, which means more than one mil in worth
+    nrow(idVAL) ##counts the number of entries. 
+    
+```
+
+###Idaho Housing Example- 10 acre plots who sold more than 10K in ag products
+
+```{r}
+agricultureLogical <- filter(idaho, AGS == 6 & ACR == 3) ##This does not preserve row names when filtering for specific conditions. 
+head(agricultureLogical)
+idaho[which(idaho$AGS == 6 & idaho$ACR == 3), ]  ##which conditional statement, which looks at which houses on 10 acres (code ACR) are making 10K or more on ag products (code AGS)
+head(idaho)
+```
+
+
+###US DOH Example - Best Hospital by Lowest Mortality
+
+```{r}
+outcome <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+ncol(outcome)
+nrow(outcome)
+names(outcome)
+    outcome[, 11] <- as.numeric(outcome[, 11]) ## assigning the 11th column, which is death rates from heart attack as a numeric object
+    hist(outcome[, 11])  ##plotting a histogram of the dataset, column 11
+
+    
+    
+##This code is meant to evaluate the hospital by state, which has the lowest mortality of three categories- heart attacks, heart failures, and pneumonia
+best <- function(state, result, removeNA = TRUE) {
+    outcome <- read.csv("outcome-of-care-measures.csv", colClasses = "character") ##assigning the data.frame the title outcome
+    outcome[is.na(outcome)] <- ""  ##Initial attempt to remove NA from data.frame, but be careful of this method as the class() can show it to be character, not numeric. 
+    shortdata <- as.data.frame(cbind(hospital <- outcome[, 2], ## assigning the columns of interest to a new data.frame, where the columns are called out explicitly
+                                     usstate <- outcome[, 7], #state
+                                     ha <- outcome[, 11], #heart attack 
+                                     hf <- outcome[, 17],  #heart failure
+                                     pne <- outcome[, 23]), stringAsFactors = FALSE) #Pneumonia
+    colnames(shortdata) <- c("Hospital", "State", "Heart_Attack", "Heart_Failure", "Pneumonia") ##re-naming the columns in order: 2, 7, 11, 17, 23
+    shortdata$Heart_Attack <- as.numeric(as.character(shortdata$Heart_Attack)) ##defining the columns with numeric data as such, but first defining them as characters before numeric.
+    shortdata$Heart_Failure <- as.numeric(as.character(shortdata$Heart_Failure))
+    shortdata$Pneumonia <- as.numeric(as.character(shortdata$Pneumonia))
+    shortdata
+    
+    sapply(shortdata, class)  ##a gut check to ensure that the columns of interest, the ones we wanted to be numeric, where in fact numeric. 
+    
+   
+    ##The beginning of the conditional statement 
+     function_state <- state  ##This helps avoid confusion when we use the column name "State"
+    if(!function_state %in% shortdata[, "State"]) { ## a logical operator that looks at whether the state matches a value/string in column "State"
+      stop("invalid state") ##The function stops if the entered state doesn't match one in column "State"
+    }
+      else if(!result %in% c("Heart_Attack", "Heart_Failure", "Pneumonia")) {  ##else if searches for the function argument, result, and if what is typed doesn't match the column headers, then it stops. 
+        stop ("invalid outcome")
+      }
+          else {  ##If all of the above conditions are met, then we complete the conditional statement with:
+              match <- which(shortdata[, "State"] == state) ##Which indices are TRUE? A logical object. Looks at which
+              call <- shortdata[match, ]
+              value <- as.numeric(call[, eval(result)])
+              mins <- min(value, na.rm = TRUE)
+              output <- call[, "Hospital"][which(value == mins)]
+              end <- output[order(output)]
+          }
+    
+    end
+}
+
+```
+ 
+###US DOH Example - Hospital Rank by Outcome per State
+
+```{r}
+
+  rankhospital <- function(state, outcome, rank, removeNA = TRUE) {
+    datafile <- read.csv("outcome-of-care-measures.csv", colClasses = "character") ##assigning the data.frame the title outcome
+    datafile[is.na(datafile)] <- ""  ##Initial attempt to remove NA from data.frame, but be careful of this method as the class() can show it to be character, not numeric. 
+    shorty <- as.data.frame(cbind(hospital <- datafile[, 2], ## assigning the columns of interest to a new data.frame, where the columns are called out explicitly
+                                     usstate <- datafile[, 7], #state
+                                     ha <- datafile[, 11], #heart attack 
+                                     hf <- datafile[, 17],  #heart failure
+                                     pne <- datafile[, 23]), stringAsFactors = FALSE) #Pneumonia
+    colnames(shorty) <- c("Hospital", "State", "Heart_Attack", "Heart_Failure", "Pneumonia") ##re-naming the columns in order: 2, 7, 11, 17, 23
+    shorty$Heart_Attack <- as.numeric(as.character(shorty$Heart_Attack)) ##defining the columns with numeric data as such, but first defining them as characters before numeric.
+    shorty$Heart_Failure <- as.numeric(as.character(shorty$Heart_Failure))
+    shorty$Pneumonia <- as.numeric(as.character(shorty$Pneumonia))
+    shorty
+
+
+if (!state %in% shorty[, "State"]) {
+        stop('invalid state')
+    } else if (!outcome %in% c("Heart_Attack", "Heart_Failure", "Pneumonia")){
+        stop('invalid outcome')
+    } else if (is.numeric(rank)) {  ##rank is a function (use str(rank) for more info)
+        call <- which(shorty[, "State"] == state) ##logical object looking at whether input state matched string in column "state", then returns. 
+        value <- shorty[call, ]    ##assigns the called data to value as a data.frame                
+        value[, eval(outcome)] <- as.numeric(value[, eval(outcome)])  ##ensures that value is numeric when searching outcome columns. 
+        value <- value[order(value[, eval(outcome)], value[, "Hospital"]), ]
+        output <- value[, "Hospital"][rank]
+    } else if (!is.numeric(rank)){
+        if (rank == "best") {
+             output <- best(state, outcome)
+        } else if (rank == "worst") {
+                call <- which(shorty[, "State"] == state)
+                value <- shorty[call, ]    
+                value[, eval(outcome)] <- as.numeric(value[, eval(outcome)])
+                value <- value[order(value[, eval(outcome)], value[, "Hospital"], decreasing = TRUE), ]
+                output <- value[, "Hospital"][1]
+        } else {
+            stop('invalid rank')
+        }
+    }
+return(output)
+}
+
+##Example outputs
+rankhospital("TX", "Heart_Attack", 1:8)
+rankhospital("TX", "Heart_Attack", "worst")
+
+```
+
+###US DOH Example - Best Hospitals by Condition (listing states and names)
+
+```{r}
+rankall <- function(outcome, num = "best"){
+    ## Read outcome data
+    datafile <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+    shorty <- as.data.frame(cbind(datafile[, 2],  # hospital
+                                datafile[, 7],  # state
+                                datafile[, 11],  # heart attack
+                                datafile[, 17],  # heart failure
+                                datafile[, 23]), # pneumonia
+                          stringsAsFactors = FALSE)
+    colnames(shorty) <- c("Hospital", "State", "Heart_Attack", "Heart_Failure", "Pneumonia")
+    shorty[, eval(outcome)] <- as.numeric(shorty[, eval(outcome)])
+    
+    
+    
+    if (!outcome %in% c("Heart_Attack", "Heart_Failure", "Pneumonia")){
+        stop('invalid outcome')
+    } else if (is.numeric(num)) {
+        by_state <- with(shorty, split(shorty, state))
+        ordered  <- list()
+        for (i in seq_along(by_state)){
+            by_state[[i]] <- by_state[[i]][order(by_state[[i]][, eval(outcome)], 
+                                                 by_state[[i]][, "Hospital"]), ]
+            ordered[[i]]  <- c(by_state[[i]][num, "Hospital"], by_state[[i]][, "State"][1])
+        }
+        result <- do.call(rbind, ordered)
+        output <- as.data.frame(result, row.names = result[, 2], stringsAsFactors = FALSE)
+        names(output) <- c("Hospital", "State")
+    } else if (!is.numeric(num)) {
+        if (num == "best") {
+            by_state <- with(shorty, split(shorty, state))
+            ordered  <- list()
+            for (i in seq_along(by_state)){
+                by_state[[i]] <- by_state[[i]][order(by_state[[i]][, eval(outcome)], 
+                                                     by_state[[i]][, "Hospital"]), ]
+                ordered[[i]]  <- c(by_state[[i]][1, c("Hospital", "State")])
+            }
+            result <- do.call(rbind, ordered)
+            output <- as.data.frame(result, stringsAsFactors = FALSE)
+            rownames(output) <- output[, 2]
+        } else if (num == "worst") {
+            by_state <- with(shorty, split(shorty, state))
+            ordered  <- list()
+            for (i in seq_along(by_state)){
+                by_state[[i]] <- by_state[[i]][order(by_state[[i]][, eval(outcome)], 
+                                                     by_state[[i]][, "Hospital"], 
+                                                     decreasing = TRUE), ]
+                ordered[[i]]  <- c(by_state[[i]][1, c("Hospital", "State")])
+            }
+            result <- do.call(rbind, ordered)
+            output <- as.data.frame(result, stringsAsFactors = FALSE)
+            rownames(output) <- output[, 2]
+        } else {
+            stop('invalid num')
+        }
+    }
+return(output)
+}
+
+
+##Example outputs
+r <- rankall("Heart_Attack", 4)
+as.character(subset(r, State == "HI")$Hospital)
+
+head(rankall("heart attack", "worst"))
+```
+
+###Samsung SmartWatch Tidy Data Example
+
+```{r}
+
+## http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones    The information
+## https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip  The file
+
+list.files("./run_analysis/")
+datapath <-file.path("/Users/payashome/Documents/FMDtRH/R Studio/R Tutorials/run_analysis", "UCI HAR Dataset")
+    files <- list.files(datapath, recursive = TRUE)  ##lists all files in the UCI folder
+    files
+    
+install.packages("dplyr")  #Installing needed packages. 
+install.packages("data.table")
+library(dplyr)
+library(data.table)
+
+## We are going to read in the train, test, features and activities as seperate
+setwd("./run_analysis/UCI HAR Dataset")
+x_train <- read.table(file.path(datapath, "train", "X_train.txt"), header = FALSE)  ##here, file.path saves time by allowing the UCI HAR to be accesses as datapath, in place of pasting the complete filepath. 
+y_train <- read.table(file.path(datapath, "train", "Y_train.txt"), header = FALSE) ## reading in the y train data
+train_sub <- read.table(file.path(datapath, "train", "subject_train.txt"), header = FALSE)
+##_________________
+x_test <- read.table(file.path(datapath, "test", "X_test.txt"), header = FALSE)  ##reading in data for test, same as above. 
+y_test <- read.table(file.path(datapath, "test", "Y_test.txt"), header = FALSE)
+test_sub <- read.table(file.path(datapath, "test", "subject_test.txt"), header = FALSE)
+##_________________
+features <- read.table(file.path(datapath, "features.txt"), header = FALSE) ##reading in additional files, no files denoted because they're already in datapath.
+actLabel <- read.table(file.path(datapath, "activity_labels.txt"), header = FALSE)
+##_________________
+
+colnames(x_train) = features[ ,2] ##defining the column names as a function of features, which has two columns, so the column name for x_train will come from the list of names in column 2 of features. 
+colnames(y_train) = "activityID"
+colnames(train_sub) = "subjectID"
+
+colnames(x_test) = features[ ,2] ##column names are same as in train. 
+colnames(y_test) = "activityID" #descriptive column names for the activity type. 
+colnames(test_sub) = "subjectID" #descriptive column name for the individual, i.e. 1 of 30 participants. 
+colnames(actLabel) <- c('activityID', 'activityTYPE')  ##simply giving column names to the actLabel data.frame
+
+combine_train <- cbind(y_train, train_sub, x_train)  ##when str(combine_train), we see activityID as first column (y_train), then the participant ID, then the numerous data columns (x_train)
+combine_test <- cbind(y_test, test_sub, x_test)
+complete_data <- rbind(combine_train, combine_test) ##row binds the two datasets together. 
+
+
+##Extracting only the mean and st.dev from the data.frame
+subfeatures <- features$V2[grep("mean\\(\\)|std\\(\\)", features$V2)]  ##similar to features[ , 2], returning the element from the second column of features. It is filtering first through and selecting a subset of data that reads "mean" or "Std" from the column head.  
+datas <- c("subjectID", "activityID", as.character(subfeatures))  ##assigning data from columns subjectid, activityid, and those filtered from subfeatures as.character to "datas"
+complete_data <- subset(complete_data, select=datas )  ##final datal.frame which is a subset of the original complete_data, now containing only mean and std data columns.
+
+names(complete_data) <- gsub("^t", "time", names(complete_data))  ##any string (i.e. column name) beginning with a t changed to time. 
+names(complete_data) <- gsub("^f", "frequency", names(complete_data))  ## same for frequency
+names(complete_data) <- gsub("Acc", "Accelerometer", names(complete_data))
+names(complete_data) <- gsub("Gyro", "Gyroscope", names(complete_data))
+names(complete_data) <- gsub("Mag", "Magnitude", names(complete_data))
+names(complete_data) <- gsub("BodyBody", "body", names(complete_data))  ##clean up repeats of strings 
+head(complete_data) ##to gut check your changes. 
+
+complete_data2 <- aggregate(. ~ subjectID + activityID, complete_data, mean) ## here, we are aggreagating everything, denoted by the ".", by subjectID first, then activity ID, and we are taking the Function = mean.
+head(complete_data2)
+write.table(complete_data2, file ="tidydata2", row.name=FALSE) ##writes a the file into the UCI HAR Dataset, which is the working directory in this example.
+
+
+```
+ 
+
+### DATA examples and Resources.  
+http://data.un.org/
+http://data.gov/
+http://data.gov.uk
+http://www.data.gov/opendatasites
+http://www.gapminder.org/
+http://www.asdfree.com/

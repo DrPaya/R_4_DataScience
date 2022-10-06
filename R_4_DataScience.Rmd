@@ -1,6 +1,8 @@
 ---
-title: "Programing in R, Fundamentals of Data Science" 
-output: html_notebook
+title: "Programing in R, Fundamentals of Data Science"
+output:
+  html_document:
+    df_print: paged
 ---
 ### Introduction to integers, objects, and factors
 ```{r}
@@ -62,6 +64,7 @@ m/n
 
 ```
 ### Cleaning and summarizing data.frames
+
 ```{r}
 data <- na.omit(read.csv("hw1_data.csv")) ## assigning the imported csv file to the string "data", where NA is ommitted for the entire table
 colMeans(data)  ## taking the mean of each of the columns of the "data" table. colMeans(x) does not work with tables containing blanks.
@@ -69,8 +72,9 @@ colMeans(data)  ## taking the mean of each of the columns of the "data" table. c
 table <- read.csv("hw1_data.csv")  ##Imports the data frame
 table[is.na(table)] <- ""   ##identifies anything that is NA, and the expression assigns ""
 
+library(dplyr)
 table <- na.omit(read.csv("hw1_data.csv"))  #Imports the data table/data frame
-subs <- filter(table, Ozone > 31, Temp > 90)  ##assigns subs to a filtered "table" dataset, filtering for two column headers
+subs <- filter(table, Ozone > 31 & Temp > 90)  ##assigns subs to a filtered "table" dataset, filtering for two column headers
 str(subs)  ##summarizes new data
 colMeans(subs)  ##takes the mean of subs
 
@@ -84,7 +88,7 @@ table <- read.csv("hw1_data.csv")
 table [is.na(table)] <- ""  ## This is a way of removing all NA without removing any rows from the data frame.
 table
 
-thing <- read.csv("name") ##for removing na without removing the complete row. 
+thing <- read.csv("hw1_data.csv") ##for removing na without removing the complete row. 
 thing[is.na(thing)] <- ""
 
 ```
@@ -268,7 +272,7 @@ sapply(s, function(x) colMeans(x[, c("mpg", "disp")], na.rm = TRUE)) ##Long way 
 
 ##This is the short way of performing the same calculation
 with(mtcars, tapply(mpg, cyl, mean))  ## for tapply, tapply( list, index = factor or filterable variable, function or function name, in this case mean)
-## The with() looks for with( data, expr) where the data is a data.frame environment, and expr is the expression, whjich in this case was tapply)
+## The with() looks for with( data, expr) where the data is a data.frame environment, and expr is the expression, which in this case was tapply)
 tapply(mtcars$mpg, mtcars$cyl, mean)  ##another way of writing the above expression. 
  
 ```
@@ -425,17 +429,18 @@ sample(1:10, replace = TRUE) ##This allows for random sampling of numbers, and i
 ### Taking a First Look at DATA and Cleaning it
 
 ```{r}
-ls() ##Shows you all of the variables in your "workspace", which is everything that was assigned 
-class() ## tells you whether you have a vector, data.frame, matrix, etc...
-dim()  ## shows you how many 1) rows, and 2) columns you have in your data.frame. The dimensions.
-nrow()  ##Shows the number of rows in a data.frame
-ncol() ##shows the number of columns in a data.frame
-object.size() ##shows you the number of bytes being used by this data.frame
-names()  ##gives you a return of the column names of the data.frame
-head(x, 10)  ##shows the first few rows of a data.frame so that not all observations are returned. The second expression can be used to choose the number of rows you wish to see, in this case, 10 rows.
-tail()  ##can be used in the same way as head, except it looks at the bottom of the data.frame, 
-summary() ##gives you a brief overview of each column's data. 
-table(data.frame$column_name)  ##In this expression, you can get summary data from a column containing categorical variables. 
+
+ls(iris) ##Shows you all of the variables in your "workspace", which is everything that was assigned. can also use it to read column headers in a data.frams. 
+class(iris) ## tells you whether you have a vector, data.frame, matrix, etc...
+dim(iris)  ## shows you how many 1) rows, and 2) columns you have in your data.frame. The dimensions.
+nrow(iris)  ##Shows the number of rows in a data.frame
+ncol(iris) ##shows the number of columns in a data.frame
+object.size(iris) ##shows you the number of bytes being used by this data.frame
+names(iris)  ##gives you a return of the column names of the data.frame
+head(iris, 10)  ##shows the first few rows of a data.frame so that not all observations are returned. The second expression can be used to choose the number of rows you wish to see, in this case, 10 rows.
+tail(iris)  ##can be used in the same way as head, except it looks at the bottom of the data.frame, 
+summary(iris) ##gives you a brief overview of each column's data. 
+table(iris$Species)  ##In this expression, you can get summary data from a column containing categorical variables. 
 
 ##_________________________________________________
 ##Using the Iris dataset
@@ -460,8 +465,8 @@ table(iris$Petal.Length, iris$Petal.Width)  ##returns a two dimension matrix wit
 table(iris$Sepal.Length %in% c("4.5", "4.6"))  ##sets a limit on a column variable and looks at the "percent in" of the defined values in the column's data, and returns how many observations meet that criteria. 
 
 ##Row sub-setting by desired values - two column example, but can limit to one. 
-      iris[iris$Sepal.Length %in% c("4.5", "4.6", "4.7") & iris$Petal.Length %in% c("1.4"),]
-
+suby <- iris[iris$Sepal.Length %in% c("4.5", "4.6", "4.7") & iris$Petal.Length %in% c("1.4"),]
+suby
 ##_________________________________________________
       
 ## XTabs 
@@ -498,7 +503,7 @@ exp(x) #is e^x
 
 ###Data ReShaping 
 ```{r}
-install.packages("reshape2") ##needed here for melt of a data.frame.
+#install.packages("reshape2") ##needed here for melt of a data.frame.
 library(reshape2)
 head(mtcars) 
 mtcars$carname <- rownames(mtcars)  ##inserts a new row, which is the carname row, and that row takes it's information from the rownames (which are usually numeric)
@@ -518,14 +523,16 @@ head(InsectSprays)
 tapply(InsectSprays$count, InsectSprays$spray, sum) ## A way os summarizing, where count is the row, and spray is the column head, the sum of sprays. 
 
 ##Plyr package can perform similar functions ion terms of summing data from data.frame (See above). 
+library(plyr)
 ddply(InsectSprays, .(spray), summarize, sum=sum(count))
+
 ```
 
 ###Manipulating data.frames using dplyr
 
 ```{r}
 str(mtcars)
-name(mtcars)  ##returns column names
+names(mtcars)  ##returns column names
 head(select(mtcars, wt:carname)) ##example of SELECT function, which requires first the data.frame, and then the columns by name you want selected in sequence. 
 
 
@@ -540,8 +547,9 @@ mtcars <- arrange(mtcars, mpg) ##ARRANGE here the data.frame based on ascending 
 head(mtcars, n=15)
 mtcars <- arrange(mtcars, desc(mpg))  ##the same function, but in descending order. 
 
-
-mtcars <- rename(mtcars, weight = wt, horse = hp) ##RENAME function in dplyr, where the new column name is first, followed by "= existing column name"
+library(dplyr)
+mtcars <- dplyr::rename(mtcars, horse = hp, weight = wt)
+ ##RENAME function in dplyr, where the new column name is first, followed by "= existing column name"
 head(mtcars)
 
 mtcars <- mutate(mtcars, mpgDev = mpg-mean(mpg, na.rm = TRUE))  ##this inserts a new column in your data.frame named mpgDev, and it performs the listed calculation, ommitting na. 
@@ -560,10 +568,11 @@ gdp <- read.csv("./data/gdp190.csv"); education <- read.csv("./data/education.cs
 head(gdp, n= 20) 
 head(education, n = 20)
       names(gdp) 
-      gdp2 <- rename(gdp, Countrycode = X, country = X.2, milDollars = X.3, rank = Gross.domestic.product.2012) ##This is useful for a rename, but not for the merge function. Headding returns the original column names, x etc...
+      gdp2 <- dplyr::rename(gdp, Countrycode = X, country = X.2, milDollars = X.3, rank = Gross.domestic.product.2012) ##This is useful for a rename, but not for the merge function. Headding returns the original column names, x etc...
       names(education)
-
-            mergeData = merge(gdp2, education, by.x="CountryCode", by.y="CountryCode") ##merges the two datasets based on the shared Column id'd, which in this case were three letter country codes. 
+            
+            gdp2 <- as.data.frame(gdp2)
+            mergeData <- merge(gdp2, education, by.x="Countrycode", by.y="CountryCode") ##merges the two datasets based on the shared Column id'd, which in this case were three letter country codes. 
             head(mergeData, n=20)
 
                   mergeData$rank <- as.integer(mergeData$rank)  ##turns the ranking from character into an integer. 
@@ -571,10 +580,10 @@ head(education, n = 20)
                   head(mergeData, n=20)
                        merge2<- filter(mergeData, Income.Group == "High income: OECD") ##Filters data in income.group columns to data of interest, "high OECD" and then a summary returns the mean rank, =32.97
                        summary(merge2)
+                       head(merge2, n=20)
                             merge3<- filter(mergeData, Income.Group == "High income: nonOECD") ##Filters data in income.group columns to data of interest, "high nonOECD" and then a summary returns the mean rank, =91.91
                            summary(merge3)
-
-                        merge3 <- quantile(mergeData, )
+                           head(merge3, n=20)
 
                         
                         
@@ -611,7 +620,7 @@ dateDownloaded  ##assigns the date to the downloaded file.
 
 ###Importing/Downloading XML Files
 
-```{r}
+(code blanked due to url failure to call). 
 library(XML)
 fileURL <- "http://www.w3schools.com/xml/simple.xml"
 doc <- xmlTreeParse(fileURL, useInternal = TRUE)
@@ -621,7 +630,7 @@ xmlName(rootNode) ## Consider installing XML package.
 rootNode[[1]]
 xmlSApply(rootNode, xmlValue)  ##gets every value for every tagged element. 
 
-#Example code #2
+Example code #2
 library(XML)
 fileURL <- "http://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Frestaurants.xml"
 doc <- xmlTreeParse(fileURL, useInternal = TRUE)
@@ -630,27 +639,26 @@ xmlName(rootNode)
 
 xmlSApply(rootNode, xmlValue)
 write.table(rootNode, "rootNode.csv")
-```
+
 
 ###Reading and importing JSON files as data.frame
 
-```{r}
+
 library(jsonlite)
 jsonData <- fromJSON("https://api.github.con/users/jtleek/repos")
 names(jsonData)
 
-##Can drill down further into the data. 
+Can drill down further into the data. 
 names(jsonData$Owner)
 names(jsondata$Owner$login)
 
 myjson <- toJSON(iris, pretty = TRUE)  ##converts data.frame into a JSON file output. 
 cat(myjson)  ##prints out
 
-```
-
 
 ###Connecting to mySQL database
 ```{r}
+library(RMySQL)
 #"RMySQL" is pacgage needed to pull from SQL databases. 
 ucscDb <- dbConnect(MySQL(), user = "genome", host = "genome-mysql.cse.ucsc.edu")
 result <- dbGetQuery(ucscDb, "show databases;"); dbDisconnect(ucscDb);
@@ -670,32 +678,31 @@ dbDisconnect(hg19) ##This is essential because it closes the connection to the m
 
 ###Reading and working with HDF5 file types
 
-```{r}
+
 source("http://bioconductor.org/biocLite.R")  ##initial loading of the hdf5 file type into R
 biocLite("rhdf5")
 
 library(hdf5)
 created = h5createFile("example.h5")
 created
-## bioconductor.org/install in order to work with data type. For another time. 
-```
+bioconductor.org/install in order to work with data type. For another time. 
+
 
 ###Data scrapping from the WEB
 
-```{r}
+
 con = url("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en") ## establishes a connection to the referenced url
 htmlCode = readLines(con) ##readlines command reads data from the connection
 close(con)  ##be sure to close the connection after use. 
 htmlCode
 
-##Alternative avenue
+Alternative avenue
 library(XML)
 url<- ("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en")
 html <- htmlTreeParse(url, useInternalNodes = T)
 
 xpathSApply(html, "//title", xmlValue)
 
-```
 
 ###Subsetting Fundamentals- A Review
 
@@ -732,10 +739,10 @@ library(datasets)
 ```{r}
 ##Using previous example data for GDP...
 fileURL1 = "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv"
-download.file(fileURL1, destfile ="./data/gdp190.csv", method = "curl")
-gdp <- read.csv("./data/gdp190.csv")
+download.file(fileURL1, destfile ="/Users/payashome/Documents/FMDtRH/R Studio/R Tutorials/R_4_DataScience/data/gdp190.csv", method = "curl")
+gdp <- read.csv("/Users/payashome/Documents/FMDtRH/R Studio/R Tutorials/R_4_DataScience/data/gdp190.csv")
 names(gdp) 
-      gdp2 <- rename(gdp, Countrycode = X, country = X.2, milDollars = X.3, rank = Gross.domestic.product.2012) ##This is useful for a rename, but not for the merge function. Headding returns the original column names, x etc...
+      gdp2 <- dplyr::rename(gdp, Countrycode = X, country = X.2, milDollars = X.3, rank = Gross.domestic.product.2012) ##This is useful for a rename, but not for the merge function. Headding returns the original column names, x etc...
       
 tolower(names(gdp2))  ##can be used to avoid mistakes by lowering the cases of all of the column names. 
 splitname <-  strsplit(names(gdp2), "\\.") ##This splits apart a name based on a defined element, in this instance periods, "\\."
@@ -749,12 +756,12 @@ sub("_", "", testName) ##will return only a single underscore removed.
 gsub("_", "", testName) ##will remove them all. 
 
 
-grep("") 
-table(grepl("integer, number of character", data.frame$column)) ##will present theu number of instances the integer appears within the column of choosing. 
+grep("number of character", gdp2$country) 
+table(grepl("integer, number of character", gdp2$rank)) ##will present the number of instances the integer appears within the column of choosing. 
 
 substr("Ronald McDonald", 1, 6) ##subsets the string between the first and fifth character + one space
 
-. 
+
 ```
 
 ###Regular Expressions - strings and patterns
@@ -776,15 +783,14 @@ substr("Ronald McDonald", 1, 6) ##subsets the string between the first and fifth
 ###Idaho Housing Example- Value above 1mil
 ```{r}
 fileURL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv?accessType=DOWNLOAD"
-download.file(fileURL, destfile = "./data/idahoHousing.csv", method = "curl")  ##curl is essential because https is a protected file. 
+download.file(fileURL, destfile = "/Users/payashome/Documents/FMDtRH/R Studio/R Tutorials/R_4_DataScience/data/idahoHousing.csv", method = "curl")  ##curl is essential because https is a protected file. 
 list.files("./data")
 dateDownloaded <- date()
 dateDownloaded
-    idaho <- read.csv(".../R Tutorials/Programming_in_R/data/idahoHousing.csv") ##Not actual file path. 
+    idaho <- read.csv("/Users/payashome/Documents/FMDtRH/R Studio/R Tutorials/R_4_DataScience/data/idahoHousing.csv") ##Not actual file path. 
     head(idaho)
     #s <- split(idaho, idaho$VAL)  ##splitting the dataset idaho by the value - a good way to get summary data. 
-    
-    sapply(s, function(x) sum(x[, "VAL"], na.rm = TRUE)) ##careful here- it sums all of the codes, which means that you have to divide by the code value to get count. 
+  
     
     idVAL <- subset(idaho, VAL == 24)  ##subset of the dataset for code24, which means more than one mil in worth
     nrow(idVAL) ##counts the number of entries. 
@@ -903,7 +909,7 @@ rankhospital("TX", "Heart_Attack", 1:8)
 rankhospital("TX", "Heart_Attack", "worst")
 
 ```
-
+ 
 ###US DOH Example - Best Hospitals by Condition (listing states and names)
 
 ```{r}
@@ -924,7 +930,7 @@ rankall <- function(outcome, num = "best"){
     if (!outcome %in% c("Heart_Attack", "Heart_Failure", "Pneumonia")){
         stop('invalid outcome')
     } else if (is.numeric(num)) {
-        by_state <- with(shorty, split(shorty, state))
+        by_state <- with(shorty, split(shorty, State))
         ordered  <- list()
         for (i in seq_along(by_state)){
             by_state[[i]] <- by_state[[i]][order(by_state[[i]][, eval(outcome)], 
@@ -936,7 +942,7 @@ rankall <- function(outcome, num = "best"){
         names(output) <- c("Hospital", "State")
     } else if (!is.numeric(num)) {
         if (num == "best") {
-            by_state <- with(shorty, split(shorty, state))
+            by_state <- with(shorty, split(shorty, State))
             ordered  <- list()
             for (i in seq_along(by_state)){
                 by_state[[i]] <- by_state[[i]][order(by_state[[i]][, eval(outcome)], 
@@ -947,7 +953,7 @@ rankall <- function(outcome, num = "best"){
             output <- as.data.frame(result, stringsAsFactors = FALSE)
             rownames(output) <- output[, 2]
         } else if (num == "worst") {
-            by_state <- with(shorty, split(shorty, state))
+            by_state <- with(shorty, split(shorty, State))
             ordered  <- list()
             for (i in seq_along(by_state)){
                 by_state[[i]] <- by_state[[i]][order(by_state[[i]][, eval(outcome)], 
@@ -964,13 +970,10 @@ rankall <- function(outcome, num = "best"){
     }
 return(output)
 }
-
-
 ##Example outputs
 r <- rankall("Heart_Attack", 4)
-as.character(subset(r, State == "HI")$Hospital)
 
-head(rankall("heart attack", "worst"))
+head(rankall("Heart_Attack", "worst"))
 ```
 
 ###Samsung SmartWatch Tidy Data Example
@@ -980,13 +983,13 @@ head(rankall("heart attack", "worst"))
 ## http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones    The information
 ## https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip  The file
 
-list.files("./run_analysis/")
-datapath <-file.path("/Users/payashome/Documents/FMDtRH/R Studio/R Tutorials/run_analysis", "UCI HAR Dataset")
+list.files("./run_analysis/UCI HAR Dataset/")
+datapath <-file.path("/Users/payashome/Documents/FMDtRH/R Studio/R Tutorials/R_4_DataScience/run_analysis", "UCI HAR Dataset")
     files <- list.files(datapath, recursive = TRUE)  ##lists all files in the UCI folder
     files
     
-install.packages("dplyr")  #Installing needed packages. 
-install.packages("data.table")
+#install.packages("dplyr")  #Installing needed packages. 
+#install.packages("data.table")
 library(dplyr)
 library(data.table)
 

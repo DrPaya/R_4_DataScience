@@ -54,7 +54,7 @@ l <- c(1, 2, NA, 4, 5, NA, 7)
 bad <- is.na(l)
 l[!bad]  ##This expression takes a vector or data frame, and removes the NA using the is.na function
 
-na.omit(read.csv("Respiration_2012_combined_demo.csv")) ##Real example that works with existing data with added NA to challenge expression
+na.omit(read.csv("./data/Respiration_2012_combined_demo.csv")) ##Real example that works with existing data with added NA to challenge expression
 
 m <- 1:4; n <- 5:8  ## below are the examples of how two processes can run simultaneously, i.e. vectorized operations
 m + n
@@ -66,29 +66,29 @@ m/n
 ### Cleaning and summarizing data.frames
 
 ```{r}
-data <- na.omit(read.csv("hw1_data.csv")) ## assigning the imported csv file to the string "data", where NA is ommitted for the entire table
+data <- na.omit(read.csv("./data/hw1_data.csv")) ## assigning the imported csv file to the string "data", where NA is ommitted for the entire table
 colMeans(data)  ## taking the mean of each of the columns of the "data" table. colMeans(x) does not work with tables containing blanks.
 
-table <- read.csv("hw1_data.csv")  ##Imports the data frame
+table <- read.csv("./data/hw1_data.csv")  ##Imports the data frame
 table[is.na(table)] <- ""   ##identifies anything that is NA, and the expression assigns ""
 
 library(dplyr)
-table <- na.omit(read.csv("hw1_data.csv"))  #Imports the data table/data frame
+table <- na.omit(read.csv("./data/hw1_data.csv"))  #Imports the data table/data frame
 subs <- filter(table, Ozone > 31 & Temp > 90)  ##assigns subs to a filtered "table" dataset, filtering for two column headers
 str(subs)  ##summarizes new data
 colMeans(subs)  ##takes the mean of subs
 
-table <- na.omit(read.csv("hw1_data.csv")) ##assigns table to the data frame
+table <- na.omit(read.csv("./data/hw1_data.csv")) ##assigns table to the data frame
 subs <- filter(table, Month == 5)  ## assigns subs to a subset via the filter from dplyr
 subs <- arrange(subs, Ozone)  ##arranges subs in ascending order
 head(select(subs, Ozone), 3)  ##shows the top values for subs, column ozone, and returns three elements
 tail(select(subs, Ozone), 3)  ##shows the bottom values for subs, column ozone, and returns three elements
 
-table <- read.csv("hw1_data.csv")   
+table <- read.csv("./data/hw1_data.csv")   
 table [is.na(table)] <- ""  ## This is a way of removing all NA without removing any rows from the data frame.
 table
 
-thing <- read.csv("hw1_data.csv") ##for removing na without removing the complete row. 
+thing <- read.csv("./data/hw1_data.csv") ##for removing na without removing the complete row. 
 thing[is.na(thing)] <- ""
 
 ```
@@ -138,7 +138,7 @@ sd(x = mydata, na.rm = FALSE) ##the standard deviation of 100 random normal vari
 
 ### Finding column mean from a data.table function
 ```{r}
-data <- read.csv("hw1_data.csv")
+data <- read.csv("./data/hw1_data.csv")
 columnmean <- function(x, removeNA = TRUE) {  ##assigning the function to columnmean where x is your input, and an additional argument to remove NA.
       nc <- ncol(x) ## assigning the number and order of columns to arbitrary string nc (ncol is a function that counts column number)
       means <- numeric(nc)  ##assigning numeric values of our nc vector to match the number of columns. This is an exmpty vector that will be filled in.
@@ -151,7 +151,7 @@ columnmean(data)
 ```
 ### Finding column median from a data.table function
 ```{r}
-data <- read.csv("hw1_data.csv")
+data <- read.csv("./data/hw1_data.csv")
 columnmedian <- function(x, removeNA = TRUE) {  ##assigning the function to columnmedian where x is your input, and an additional argument to remove NA.
     nc <- ncol(x) ## assigning the number and order of columns to arbitrary string nc (ncol is a function that counts column number)
     medians <- numeric(nc)  ##assigning numeric values of our nc vector to match the number of columns. This is an empty vector that will be filled in.
@@ -169,7 +169,7 @@ columnmedian(data)
 library(data.table)
 
 combinedata <- function( id = 1:x) {  ##This is a function for combining multiple csv's for data analysis, where the number of combined files can be defined in the second argument. 
-  fileslist <- list.files(".../R Tutorials/Programming_in_R/specdata", full.names = TRUE) ##Not actual file path.
+  fileslist <- list.files("./data/R Tutorials/R_4_DataScience/specdata", full.names = TRUE) ##Not actual file path.
   masterdata <- data.frame()   ## means the output will be a new data frame
   x = sequence(length(fileslist))  ##This defines how many files are in a folder, where it's looking at the sequence and length of the list.files assigned to fileslist
   for (i in id) {
@@ -192,11 +192,11 @@ x <- Sys.time()  ## descsribes the current time on the system you are working in
 x
 
 datestring <-  c("January 10, 2012 10:40", "December 9, 2011 9:10")  ## Dates written in character string format. To be turned into time objects.
-x <- strptime(datestring, "%B %d, %Y %H:%M")  ## strptime function works here- passed a format string. % Bhe month, %d the day, %Y 4-digit year, and then hours and minutes. 
+x <- strptime(datestring, "%B %d, %Y %H:%M")  ## strptime function works here- passed a format string. % B the month, %d the day, %Y 4-digit year, and then hours and minutes. 
 x
 
 x <- as.Date("2022-08-30")  ##defining the data and assigning it to x
-y <- strptime("9 Jan 2021 11:34:21", "%d $b $y %H:%M:%S")  ## assigning a POSIXlt formatted date and time to y
+y <- strptime("9 Jan 2021 11:34:21", "%d $B $Y %H:%M:%S")  ## assigning a POSIXlt formatted date and time to y
 x <- as.POSIXlt(x) ##changing date into POSIXlt format for calculations.
 x-y
 
@@ -810,7 +810,7 @@ head(idaho)
 ###US DOH Example - Best Hospital by Lowest Mortality
 
 ```{r}
-outcome <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+outcome <- read.csv("./data/outcome-of-care-measures.csv", colClasses = "character")
 ncol(outcome)
 nrow(outcome)
 names(outcome)
@@ -821,7 +821,7 @@ names(outcome)
     
 ##This code is meant to evaluate the hospital by state, which has the lowest mortality of three categories- heart attacks, heart failures, and pneumonia
 best <- function(state, result, removeNA = TRUE) {
-    outcome <- read.csv("outcome-of-care-measures.csv", colClasses = "character") ##assigning the data.frame the title outcome
+    outcome <- read.csv("./data/outcome-of-care-measures.csv", colClasses = "character") ##assigning the data.frame the title outcome
     outcome[is.na(outcome)] <- ""  ##Initial attempt to remove NA from data.frame, but be careful of this method as the class() can show it to be character, not numeric. 
     shortdata <- as.data.frame(cbind(hospital <- outcome[, 2], ## assigning the columns of interest to a new data.frame, where the columns are called out explicitly
                                      usstate <- outcome[, 7], #state
@@ -864,7 +864,7 @@ best <- function(state, result, removeNA = TRUE) {
 ```{r}
 
   rankhospital <- function(state, outcome, rank, removeNA = TRUE) {
-    datafile <- read.csv("outcome-of-care-measures.csv", colClasses = "character") ##assigning the data.frame the title outcome
+    datafile <- read.csv("./data/outcome-of-care-measures.csv", colClasses = "character") ##assigning the data.frame the title outcome
     datafile[is.na(datafile)] <- ""  ##Initial attempt to remove NA from data.frame, but be careful of this method as the class() can show it to be character, not numeric. 
     shorty <- as.data.frame(cbind(hospital <- datafile[, 2], ## assigning the columns of interest to a new data.frame, where the columns are called out explicitly
                                      usstate <- datafile[, 7], #state
@@ -903,7 +903,7 @@ if (!state %in% shorty[, "State"]) {
     }
 return(output)
 }
-
+ 
 ##Example outputs
 rankhospital("TX", "Heart_Attack", 1:8)
 rankhospital("TX", "Heart_Attack", "worst")
@@ -915,7 +915,7 @@ rankhospital("TX", "Heart_Attack", "worst")
 ```{r}
 rankall <- function(outcome, num = "best"){
     ## Read outcome data
-    datafile <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+    datafile <- read.csv("./data/outcome-of-care-measures.csv", colClasses = "character")
     shorty <- as.data.frame(cbind(datafile[, 2],  # hospital
                                 datafile[, 7],  # state
                                 datafile[, 11],  # heart attack

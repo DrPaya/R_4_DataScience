@@ -1,0 +1,75 @@
+---
+title: "Exploratory Data Analysis"
+output: html_notebook
+---
+
+##Exploratory Data Analysis- Section 4
+
+###Analytical Graphics
+Principle 1: show comparisons, and don't forget your control
+Principle 2: Show causality, mechanism, explanation for differences
+Principle 3: show multi-variate data
+Principle 4: Show what you need, and don't be limited by the tools
+Principle 5: describe and document your evidence (code, labels, etc...)
+Principle 6: content is king- the story you tell is most important
+
+##Exploratory Graphs
+Why? Look at trends, debug an analysis, communicate results, suggest modelling strategies.
+    - made quickly, many are made at once, axes are cleaned later, and colors will change. 
+    
+```{r}
+## par() changes the global graphics parameters for all graphics. Requires a reset by using the code below: 
+old.par <- par(mar = c(0, 0, 0, 0))
+par(old.par) ##This code allows you to reset the parameters of a plot in R. 
+
+# ls() is the orientation of axis labels on a plot
+
+boxplot(mtcars$mpg, col= "blue") ##example of a boxplot
+abline(h = max(mtcars$mpg), col= "orange", lwd = 2)  ##h here is horizontal line addition
+abline(h = mean(mtcars$mpg), col ="green", lwd = 2)  ## lwd is the line width/thickness
+
+boxplot(mpg ~ cyl, data = mtcars, col = "orange")  ##plotting the relationship " ~ " between to variables, where mpy is y axis, and cyl is x axis. 
+abline(h = mean(mtcars$mpg), col = "blue", lwd = 2)
+
+mtcars2 <- transform(mtcars, cyl= factor(cyl))
+boxplot(disp ~ cyl, data = mtcars2, xlab = "Cylinders", ylab = "Displacement") ##labeling axes in base R. 
+
+
+hist(mtcars$mpg, col= "orange", breaks = 20, main = "Miles per Gallon accross cars") ##example of a histogram
+rug(mtcars$mpg)
+abline(v = mean(mtcars$mpg), col ="purple", lwd = 3)  ##v stands for vertical line. 
+abline(v = max(mtcars$mpg), col = "yellow", lwd = 2)
+
+
+barplot(table(mtcars$gear), col= "turquoise", main = "Number of Gears per Car")
+
+
+with(mtcars, plot(mpg, weight, col=mpg))  ##xy scatter plot comparing two column variables. The differemt mpg's are listed in different colors. 
+abline(h = mean(mtcars$weight), col="orange", lty = 2)  ##lty is a dotted line. 
+abline(v = mean(mtcars$mpg), col="yellow", lty=2)
+
+
+par(mfrow = c(1,3), mar = c(5,4,2,1))  ##more to learn here
+mtcars$gear <- as.integer(mtcars$gear)
+with(subset(mtcars, gear = 3), plot(mpg, weight, col = weight, main = "Three Gears"))
+with(subset(mtcars, gear = 4), plot(mpg, weight, col = weight, main = "Four Gears"))
+with(subset(mtcars, gear = 5), plot(mpg, weight, col = weight, main = "Five Gears"))
+
+
+##Standard plot systems
+old.par <- par(mar = c(0, 0, 0, 0))
+par(old.par) ##This code allows you to reset the parameters of a plot in R. 
+with(cars, plot(speed, dist))
+
+##Standard lattice system
+#e.g. xyplot and bwplot
+library(lattice)
+xyplot(mpg ~ disp | gear, data = mtcars, layout = c(4,1)) ##separating x/y plot by gear
+
+##ggplot2 plotting
+library(ggplot2)
+data(mtcars)
+qplot(disp, mpg, data = mtcars)
+
+```
+

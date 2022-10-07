@@ -1,6 +1,8 @@
 ---
 title: "Exploratory Data Analysis"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ##Exploratory Data Analysis- Section 4
@@ -19,57 +21,165 @@ Why? Look at trends, debug an analysis, communicate results, suggest modelling s
     
 ```{r}
 ## par() changes the global graphics parameters for all graphics. Requires a reset by using the code below: 
-old.par <- par(mar = c(0, 0, 0, 0))
+old.par <- par(mfrow = c(1,1), mfcol = c(1,1), mar = c(5, 4, 4, 2))
 par(old.par) ##This code allows you to reset the parameters of a plot in R. 
 
+## The list below are all par() commands. 
 # ls() is the orientation of axis labels on a plot
+# bg() is the background color
+# mar() defines the margin size
+# oma() is the outer margin size
+# mfrow() is numbers of plots per row, column, filled row-wise. 
+# mfcol() is numbers of plots per row. column, filled column-wise. 
 
 boxplot(mtcars$mpg, col= "blue") ##example of a boxplot
 abline(h = max(mtcars$mpg), col= "orange", lwd = 2)  ##h here is horizontal line addition
 abline(h = mean(mtcars$mpg), col ="green", lwd = 2)  ## lwd is the line width/thickness
 
+##_______________________
 boxplot(mpg ~ cyl, data = mtcars, col = "orange")  ##plotting the relationship " ~ " between to variables, where mpy is y axis, and cyl is x axis. 
 abline(h = mean(mtcars$mpg), col = "blue", lwd = 2)
 
+##_______________________
 mtcars2 <- transform(mtcars, cyl= factor(cyl))
 boxplot(disp ~ cyl, data = mtcars2, xlab = "Cylinders", ylab = "Displacement") ##labeling axes in base R. 
 
-
+##_______________________
 hist(mtcars$mpg, col= "orange", breaks = 20, main = "Miles per Gallon accross cars") ##example of a histogram
 rug(mtcars$mpg)
 abline(v = mean(mtcars$mpg), col ="purple", lwd = 3)  ##v stands for vertical line. 
 abline(v = max(mtcars$mpg), col = "yellow", lwd = 2)
 
-
+##_______________________
 barplot(table(mtcars$gear), col= "turquoise", main = "Number of Gears per Car")
 
+##_______________________
+mtcars <- na.omit(mtcars)
+with(mtcars, plot(mpg, disp, col=mpg))
+with(subset(mtcars, disp > 400), points(mpg, disp, col = "black")) ##xy scatter plot comparing two column variables. we are taking a subset of the mtcars where displacement is greater than 400, and making those points black.  
 
-with(mtcars, plot(mpg, weight, col=mpg))  ##xy scatter plot comparing two column variables. The differemt mpg's are listed in different colors. 
-abline(h = mean(mtcars$weight), col="orange", lty = 2)  ##lty is a dotted line. 
-abline(v = mean(mtcars$mpg), col="yellow", lty=2)
+##_______________________
+##Adding more details to standard plot, e.g. using the legend expression, and adding regression. 
+with(mtcars, plot(mpg, disp, main = "Association Between MPG and Displacement", type = "n"))
+with(subset(mtcars, cyl == 4), points(mpg, disp, col = "green"))
+with(subset(mtcars, cyl != 4), points(mpg, disp, col = "red"))
+legend("topright", pch = 1, col = c("green", "red"), legend = c("4 Cylinders", "More than 4 cylinders")) #pch changes the characteristic of the circle/point in the plot. 
+model <- lm(disp ~ mpg, mtcars) ##creating a liner model between two varialbes, mpg and displacement
+abline(model, col = "black", lty = 2)
 
 
-par(mfrow = c(1,3), mar = c(5,4,2,1))  ##more to learn here
+#abline(h = mean(mtcars$weight), col="orange", lty = 2)  ##lty is a dotted line. 
+#abline(v = mean(mtcars$mpg), col="yellow", lty=2)
+
+##_______________________
+par(mfrow = c(3,1), mar = c(5,4,2,1))  ##more to learn here  ##starting at bottom and moving clockwise is how margins are oriented. For mfrow, it states one row, three column.
 mtcars$gear <- as.integer(mtcars$gear)
-with(subset(mtcars, gear = 3), plot(mpg, weight, col = weight, main = "Three Gears"))
-with(subset(mtcars, gear = 4), plot(mpg, weight, col = weight, main = "Four Gears"))
-with(subset(mtcars, gear = 5), plot(mpg, weight, col = weight, main = "Five Gears"))
+with(subset(mtcars, gear == 3), plot(mpg, wt, col = wt, main = "Three Gears"))
+with(subset(mtcars, gear == 4), plot(mpg, wt, col = wt, main = "Four Gears"))
+with(subset(mtcars, gear == 5), plot(mpg, wt, col = wt, main = "Five Gears"))
 
+##_______________________
+old.par <- par(mfrow = c(1,1), mfcol = c(1,1), mar = c(5, 4, 4, 2))
+par(old.par) ##resetting
+par(mfrow = c(1,3), oma = c(0,0,2,0))  ##gives us a little room on the outer margin for a main title/header.
+with(airquality, {
+  plot(Wind, Ozone, main = "Ozone vs. Wind")
+  plot(Solar.R, Ozone, main = "Ozone vs. Solar Radiation")
+  plot(Temp, Ozone, main = "Ozone and Temperature")
+  mtext("Ozone vs. Weather in NYC", outer = TRUE) ##adds a main title/header to this series of three plots. 
+})
+##_______________________
 
 ##Standard plot systems
-old.par <- par(mar = c(0, 0, 0, 0))
+old.par <- par(mfrow = c(1,1), mfcol = c(1,1), mar = c(5, 4, 4, 2))
 par(old.par) ##This code allows you to reset the parameters of a plot in R. 
 with(cars, plot(speed, dist))
 
+##_______________________
 ##Standard lattice system
 #e.g. xyplot and bwplot
 library(lattice)
 xyplot(mpg ~ disp | gear, data = mtcars, layout = c(4,1)) ##separating x/y plot by gear
 
+##_______________________
 ##ggplot2 plotting
 library(ggplot2)
 data(mtcars)
 qplot(disp, mpg, data = mtcars)
 
+```
+
+### Exporting/Copying plots to files
+Once the plot has been generated...
+dev.copy(png, file = "filename.png")
+dev.off()
+
+```{r}
+##code for histogram of power data, UC Irvine Machine Learning Repository
+data_table <- read.table("./data/household_power_consumption.txt", header = TRUE, sep = ";", na.strings = "?")  ##separated by semi colons, and the na's are marked as "?".
+data_table$Date_Time <- paste(data_table$Date, data_table$Time)  ##Paste the first two rows together and renames them as Date_Time
+      data_table$Global_active_power <- as.numeric(data_table$Global_active_power)  ##changes needed data to numeric. 
+data_table$Date_Time <- strptime(data_table$Date_Time, "%d/%m/%Y %H:%M:%S")  #defining time string as time. 
+         data_table <- data_table[data_table$Date %in% c("1/2/2007", "2/2/2007"), ]  ##subsets the data for the two dates in question. 
+               head(data_table, n=20) ##quick gut check
+
+hist(data_table$Global_active_power, col= "red", breaks = 14, main = "Global Active Power"
+      , xlab = "Global Active Power (kilowatts)")
+            dev.copy(png, file = "plot1_R.png")
+            dev.off()
+```
+
+```{r}
+##code for line plot of power data, UC Irvine Machine Learning Repository
+data_table <- read.table("./data/household_power_consumption.txt", header = TRUE, sep = ";", na.strings = "?")  ##separated by semi colons, and the na's are marked as "?".
+data_table$Date_Time <- paste(data_table$Date, data_table$Time)  ##Paste the first two rows together and renames them as Date_Time
+      data_table$Global_active_power <- as.numeric(data_table$Global_active_power)  ##changes needed data to numeric. 
+data_table$Date_Time <- strptime(data_table$Date_Time, "%d/%m/%Y %H:%M:%S")  #defining time string as time. 
+       data_table <- data_table[data_table$Date %in% c("1/2/2007", "2/2/2007"), ]  ##subsets the data for the two dates in question. 
+          head(data_table, n=20) ##quick gut check
+          
+with(data_table, plot(Date_Time, Global_active_power, xlab = "", ylab = "Global Active Power (kilowatts)", type ="l", lwd = 2)) ##defining the plot type as line or "l", and width of 2. 
+      dev.copy(png, file = "plot2_R.png")
+          dev.off()
+```
+
+```{r}
+##code for three-variable plot of metering data, UC Irvine Machine Learning Repository
+data_table <- read.table("./data/household_power_consumption.txt", header = TRUE, sep = ";", na.strings = "?")  ##separated by semi colons, and the na's are marked as "?".
+    data_table$Date_Time <- paste(data_table$Date, data_table$Time)  ##Paste the first two rows together and renames them as Date_Time
+data_table$Global_active_power <- as.numeric(data_table$Global_active_power)  ##changes needed data to numeric. 
+    data_table$Date_Time <- strptime(data_table$Date_Time, "%d/%m/%Y %H:%M:%S")  #defining time string as time. 
+        data_table <- data_table[data_table$Date %in% c("1/2/2007", "2/2/2007"), ]  ##subsets the data for the two dates in question. 
+            head(data_table, n=20) ##quick gut check
+            
+with(data_table, plot(Date_Time, Sub_metering_1, col= "black", xlab = "", ylab ="Energy sub metering", type = "l"))
+                      lines(data_table$Date_Time, data_table$Sub_metering_2, col="orange", type="l")
+                      lines(data_table$Date_Time, data_table$Sub_metering_3, col="blue", type="l")
+                          legend("topright", c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), col = c("black", "orange", "blue"), lty = 1)
+                              dev.copy(png, file = "plot3_R.png")
+                               dev.off() 
+```
+```{r}
+##code for 2x2 plot of metering data, UC Irvine Machine Learning Repository
+data_table <- read.table("./data/household_power_consumption.txt", header = TRUE, sep = ";", na.strings = "?")  ##separated by semi colons, and the na's are marked as "?".
+    data_table$Date_Time <- paste(data_table$Date, data_table$Time)  ##Paste the first two rows together and renames them as Date_Time
+       data_table$Global_active_power <- as.numeric(data_table$Global_active_power)  ##changes needed data to numeric. 
+       data_table$Global_reactive_power <- as.numeric(data_table$Global_reactive_power)
+       data_table$Voltage <- as.numeric(data_table$Voltage)
+data_table$Date_Time <- strptime(data_table$Date_Time, "%d/%m/%Y %H:%M:%S")  #defining time string as time. 
+      data_table <- data_table[data_table$Date %in% c("1/2/2007", "2/2/2007"), ]  ##subsets the data for the two dates in question. 
+          head(data_table, n=20) ##quick gut check
+          
+
+par(mfrow = c(2,2))
+with(data_table, plot(Date_Time, Global_active_power, xlab = "", ylab = "Global Active Power (kilowatts)", type ="l", lwd = 2))
+        with(data_table, plot(Date_Time, Voltage, xlab = "", ylab = "Voltage", type ="l", lwd = 1))
+            with(data_table, plot(Date_Time, Sub_metering_1, col= "black", xlab = "", ylab ="Energy sub metering", type = "l"))
+            lines(data_table$Date_Time, data_table$Sub_metering_2, col="orange", type="l")
+            lines(data_table$Date_Time, data_table$Sub_metering_3, col="blue", type="l")
+            legend("topright", c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), col = c("black", "orange", "blue"))
+                  with(data_table, plot(Date_Time, Global_reactive_power, xlab = "", type ="l", lwd = 1))
+                      dev.copy(png, file = "plot4_R.png")
+                       dev.off()
 ```
 

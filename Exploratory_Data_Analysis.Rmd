@@ -114,6 +114,8 @@ Once the plot has been generated...
 dev.copy(png, file = "filename.png")
 dev.off()
 
+### Histogram Example, Power Grid
+
 ```{r}
 ##code for histogram of power data, UC Irvine Machine Learning Repository
 data_table <- read.table("./data/household_power_consumption.txt", header = TRUE, sep = ";", na.strings = "?")  ##separated by semi colons, and the na's are marked as "?".
@@ -128,6 +130,7 @@ hist(data_table$Global_active_power, col= "red", breaks = 14, main = "Global Act
             dev.copy(png, file = "plot1_R.png")
             dev.off()
 ```
+### Plotting example, Line Plot, Power Grid
 
 ```{r}
 ##code for line plot of power data, UC Irvine Machine Learning Repository
@@ -142,6 +145,7 @@ with(data_table, plot(Date_Time, Global_active_power, xlab = "", ylab = "Global 
       dev.copy(png, file = "plot2_R.png")
           dev.off()
 ```
+###Plotting + Lines (multi-column) Example, Power Grid
 
 ```{r}
 ##code for three-variable plot of metering data, UC Irvine Machine Learning Repository
@@ -159,6 +163,9 @@ with(data_table, plot(Date_Time, Sub_metering_1, col= "black", xlab = "", ylab =
                               dev.copy(png, file = "plot3_R.png")
                                dev.off() 
 ```
+
+###2x2 Plot Example, Power Grid
+
 ```{r}
 ##code for 2x2 plot of metering data, UC Irvine Machine Learning Repository
 data_table <- read.table("./data/household_power_consumption.txt", header = TRUE, sep = ";", na.strings = "?")  ##separated by semi colons, and the na's are marked as "?".
@@ -180,6 +187,6 @@ with(data_table, plot(Date_Time, Global_active_power, xlab = "", ylab = "Global 
             legend("topright", c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), col = c("black", "orange", "blue"))
                   with(data_table, plot(Date_Time, Global_reactive_power, xlab = "", type ="l", lwd = 1))
                       dev.copy(png, file = "plot4_R.png")
-                       dev.off()
+                       dev.off() 
 ```
 

@@ -190,3 +190,474 @@ with(data_table, plot(Date_Time, Global_active_power, xlab = "", ylab = "Global 
                        dev.off() 
 ```
 
+##Lattice Plotting
+xyplot( y~ x | f * g, data) is the standard notation for a lattice plot. 
+left of ~ is trhe y-axis, and on the right is the x-axis
+f and g are conditioning variables where the * indicates an interaction between two variables
+```{r}
+library(lattice)
+xyplot(mpg ~ disp, data =mtcars) ##simple scatter plot example using mtcars. 
+xyplot(Ozone ~ Wind, data = airquality)
+
+##_____________________
+airquality <- transform(airquality, Month = factor(Month))  ##Month was turned into a factor that we will ultimately parse the data into. 
+xyplot(Ozone ~ Wind | Month, data = airquality, layout = c(5,1))  ##xyplot, where month was listed as a conditioning variable. 
+
+```
+
+##ggplot2 plotting
+Grammar of graphics by Leland Wilkinson (ggplot2.org)
+aesthetics: size, shape, color
+geoms: points, lines
+###qplot
+```{r}
+library(ggplot2) 
+str(mpg) ##example dataset that comes with ggplot2
+qplot(displ, hwy, data = mpg)  ##most basic of "base" plots for ggplot2. displ = x-coordinate, hwy = y-coordinate. 
+qplot(displ, hwy, data = mpg, color = drv)  ##adds a legend where colors are specific to variable drv (front, rear or 4w)
+qplot(displ, hwy, data = mpg, geom = c("point", "smooth"))  ## grey = 95% confidence interval, and "smooth" is simply the function for the line. 
+qplot( hwy, data = mpg, fill = drv)  ##when only one variable is defined, it will produce a histogram. fill is an alternative to color when using a histogpram. 
+
+##Facets_______________
+qplot(displ, hwy, data = mpg, facets = .~drv) ## here, the facets function splits "." or everything by ~ the variable drv
+qplot(hwy, data= mpg, facets = drv~., binwidth= 2, color = drv)## here, histogram where facet used to separate drv ~ by "." or everything
+
+##Geoms______________________
+qplot(hwy, data = mpg, geom="density", color = drv) ##example of geom "density" which is a smooth plot alternative to histogram, can accept y variable only, notx and y
+
+qplot(displ, hwy, data = mpg, color = drv) + geom_smooth(method = "lm")
+qplot(displ, hwy, data = mpg, facets = .~drv, color = drv) + geom_smooth(method = "lm") ## using facets to separate out the regression by drv. lm for linear model.
+qplot(displ, hwy, data = mpg, facets = .~ cyl, color = cyl, geom = c("point", "smooth"), method = "lm")  ##again, point and smooth gives us the confidence interval, along with a line "lm" for linear model. 
+
+##______________________
+```
+
+### ggplot
+
+```{r}
+g <- ggplot(mpg, aes(hwy, cyl))  ##aes stands for the aesthetic elements, i.e. what and it's orientation.
+summary(g)
+##print(g) will return an error because there is  insufficient information to provide an output. 
+p <- g + geom_point()  ##point layer added to g
+print(p)
+ g + geom_point() + geom_smooth()  ##smooths out and adds confidence bands. 
+ g + geom_point() + geom_smooth(method = "lm") ##adds a linear model best-fit line
+ 
+ ##___________________
+ h <- ggplot(mpg, aes(displ, drv))
+ h + geom_point(color = "forestgreen", size = 4, alpha= 1/2) + ##color of this variable is a constant - green
+   #facet_grid(. ~ cyl) + 
+   geom_smooth(method = "lm") + 
+   xlab("Displacement") + ##labels the x axis
+  ylab("Drive_Type") +
+   ggtitle("Engine Attributes")
+ 
+        h <- ggplot(mpg, aes(displ, cty))
+        h + geom_point(aes(color = cyl), size = 4, alpha= 1/2) +   ###assigning a color to a variable requires aes(color = column name), and the alpha is the transparency, size is just that. 
+          theme_classic(base_family = "Avenir", base_size = 14) + ##changes the base font for the entire plot
+           geom_smooth(size = 1.5, linetype = 6, color = "orange", method = "lm") + 
+           xlab("Displacement") + ##labels the x axis
+            ylab("City_MPG") +
+            ggtitle("Engine Attributes") +
+            ylim(-5, 30)  ##sets a limit to the y axis, but in ggplot, that will subset the data and remove outlier points. 
+                ## + coor_cartesian(ylim = c(-5, 30))  This is a way of preventing sub-setting and outliers are included in the finished plot. 
+  
+        ##facet_wrap( column/category ~ column/category2, nrow = y, ncol = x)
+```
+
+##Heirarchical Clustering [i.e. cluster analysis]
+- How do we define close?
+    - Continuous = euclidian distance (straight line) a^2 + b^2 = c^2 
+    - Continuous = correlation similarity
+    - Binary = manhattan distance. |A1 - A2| + |B1 - B2| + .... |Z1 - Z2| absolute values - think walking city blocks.
+- How do we group things? 
+- How to we visualize the groupings? 
+- How do we interpret the grouping? 
+
+Taking an agglomerative approach (bottom up), find closes two things, put them into larger clusters, find next closest, etc...
+    - Required a defined distance
+    - A merging approach
+  Produced: a tree showing how close things are to each other. 
+
+e.g. dist(mpg) gives you the pairwise differences between each variable in each column. 
+
+###Dendrogram - rudimentary
+```{r}
+distxy <- dist(mpg$cty)
+hClustering <- hclust(distxy)
+plot(hClustering)  ##this clustering does not necessarily demonsrate anything significant in terms of output or trends, but will at least produce a figure. 
+          #clusterMatrix <- as.matrix(hClustering[ , 8:9])
+          #heatmap(clusterMatrix)
+
+
+
+set.seed(1234)
+par(mar = c(0,0,0,0))
+x <- rnorm(12, mean= rep(1:3, each = 4), sd = 0.2)
+y <- rnorm(12, mean = rep(c(1,2,1), each = 4), sd = 0.2)
+plot(x,y, col= "orange", pch= 5, cex = 2)
+text(x + 0.08, y + 0.08, labels = as.character(1:12))
+      Data_thing <- data.frame( x=x, y=y)
+      data_dist <- dist(Data_thing)
+      thing_cluster <- hclust(data_dist)
+      plot(thing_cluster)
+           thing_matrix <- as.matrix(Data_thing) [sample(1:12), ]
+           heatmap(thing_matrix)  
+
+```
+
+##k-means Clustering & Dimension reduction
+Partitions
+  -fix a number of clusters
+  - get "centroids" of each cluster
+  - assign things to closest centroid
+  - recalculate centroids and iterate
+Requires
+  - A defined distance metric
+  - a number of clusters
+  - an initial guess as to cluster centroids
+Produces
+  - Final estimate of cluster and assignments
+  
+###kmeans Clustering  
+```{r}
+##Generating random data here
+set.seed(1234)
+par(mar = c(0,0,0,0))
+x <- rnorm(12, mean= rep(1:3, each = 4), sd = 0.2)
+y <- rnorm(12, mean = rep(c(1,2,1), each = 4), sd = 0.2)
+plot(x,y, col= "orange", pch= 5, cex = 2)
+text(x + 0.08, y + 0.08, labels = as.character(1:12))
+
+##kmeans function/argument for clustering analyses
+data_thing <- data.frame(x = x, y = y)
+kmeansObject <- kmeans(data_thing, centers = 3)  ##caling kmeans argument, three centers/groups
+names(kmeansObject)
+par(mar = rep(0.2, 4))  #adjustes the margins
+plot( x, y, col= kmeansObject$cluster, pch = 19, cex = 2)  #plots the kmeans function, calling out the clusters
+points(kmeansObject$centers, col = 1:3, pch = 3, lwd = 3)  # plots the points that represent the cluster centers
+
+
+```
+ 
+### Principal components analysis and singular decomposition 
+Not much to report here, lol. 
+
+### Working with color in R
+```{r}
+library(grDevices) ##takes blending of primary and other colors and blend them together. 
+# colorRamp  (e.g. gray)
+# colorRampPalette  (e.g. heat.colors)
+# colors()
+color1 <- colorRamp(c("red", "blue"))
+color1(0) ##will  return a matrix of three values - Red  Green  Blue in that order, where it's all red.
+color1(1) ##will return a matrix that is all blue. 
+color1(0.5) # will return a blend of both red and blue, but no green. 
+    color1(seq(0,1, len = 10))   ## generated a sequence, length of 10, of a sequence between all red to all blue. 
+    
+library(RColorBrewer)
+    cols <- brewer.pal(15, "RdYlGn")  ##brewer.pal the only useful argument in this package. colorbrewer.org has the list of available color shchema. 
+    pal <-colorRampPalette(cols)  ##rendering the colors into Ramp Pallete
+    image(volcano, col= pal(15))  ##asking the colors to be those rendered into pal, and there will be 10 different colors. 
+
+    
+x <- rnorm(1000)
+y <- rnorm(1000)
+plot(x, y, col = rgb(.1,0,.3,.2), pch = 19)  ##RGB looks at red, green, blue as numeric, and last is the alpha of 0.2
+
+```
+
+
+### Samsung phone- accelerometer example. 
+```{r}
+list.files("./data/UCI HAR Dataset/")
+datapath <-file.path("/Users/payashome/Documents/FMDtRH/R Studio/R Tutorials/R_4_DataScience/data", "UCI HAR Dataset 2")
+    files <- list.files(datapath, recursive = TRUE)  ##lists all files in the UCI folder
+    files
+    
+    
+library(dplyr)
+library(data.table)
+
+## We are going to read in the train, test, features and activities as seperate
+#setwd("./data/UCI HAR Dataset 2")
+x_train <- read.table(file.path(datapath, "train", "X_train.txt"), header = FALSE)  ##here, file.path saves time by allowing the UCI HAR to be accesses as datapath, in place of pasting the complete filepath. 
+  y_train <- read.table(file.path(datapath, "train", "Y_train.txt"), header = FALSE) ## reading in the y train data
+      train_sub <- read.table(file.path(datapath, "train", "subject_train.txt"), header = FALSE)
+##_________________
+x_test <- read.table(file.path(datapath, "test", "X_test.txt"), header = FALSE)  ##reading in data for test, same as above. 
+  y_test <- read.table(file.path(datapath, "test", "Y_test.txt"), header = FALSE)
+      test_sub <- read.table(file.path(datapath, "test", "subject_test.txt"), header = FALSE)
+##_________________
+features <- read.table(file.path(datapath, "features.txt"), header = FALSE) ##reading in additional files, no files denoted because they're already in datapath.
+actLabel <- read.table(file.path(datapath, "activity_labels.txt"), header = FALSE)
+
+colnames(actLabel) <- c('activityID', 'activityTYPE')
+colnames(x_train) = features[ ,2] ##defining the column names as a function of features, which has two columns, so the column name for x_train will come from the list of names in column 2 of features. 
+  colnames(y_train) = "activityID"
+      y_train <- left_join(y_train, actLabel, by = "activityID")  ##Left joining two data.frames using actLabel as the key, where both column ID's have to match. 
+      colnames(train_sub) = "subjectID"
+
+colnames(x_test) = features[ ,2] ##column names are same as in train. 
+  colnames(y_test) = "activityID" #descriptive column names for the activity type. 
+    y_test <- left_join(y_test, actLabel, by ="activityID")
+      colnames(test_sub) = "subjectID" #descriptive column name for the individual, i.e. 1 of 30 participants. 
+        ##simply giving column names to the actLabel data.frame
+      
+
+combine_train <- cbind(y_train, train_sub, x_train)  ##when str(combine_train), we see activityID as first column (y_train), then the participant ID, then the numerous data columns (x_train)
+combine_test <- cbind(y_test, test_sub, x_test)
+complete_data <- rbind(combine_train, combine_test) ##row binds the two datasets together. 
+
+
+names(complete_data) <- gsub("^t", "time", names(complete_data))  ##any string (i.e. column name) beginning with a t changed to time. 
+names(complete_data) <- gsub("^f", "frequency", names(complete_data))  ## same for frequency
+names(complete_data) <- gsub("Acc", "Accelerometer", names(complete_data))
+names(complete_data) <- gsub("Gyro", "Gyroscope", names(complete_data))
+names(complete_data) <- gsub("Mag", "Magnitude", names(complete_data))
+names(complete_data) <- gsub("BodyBody", "body", names(complete_data)) 
+
+write.table(complete_data, file ="tidydata_samsung", row.name=FALSE)
+head(complete_data, n=20)
+
+##___________
+par(mfrow = c(1,2), mar = c(5,4,2,1))
+complete_data <- transform(complete_data, activityTYPE = factor(activityTYPE))
+    sub1 <- subset(complete_data, subjectID == 1)
+      plot(sub1[, 4], col= sub1$activityID, ylab = names(sub1)[4])
+      plot(sub1[, 5], col = sub1$activityID, ylab = names(sub1)[5])
+        op <- par(cex = .5)  ##changes the font size for the legend of the plot. 
+              legend("bottomright", legend = unique(sub1$activityTYPE), col = unique(sub1$activityTYPE), pch = 1)
+
+              
+par(mfrow = c(1,2), mar = c(5,4,2,1))  ##looking at the max acceleration in x and y for subject 1 
+complete_data <- transform(complete_data, activityTYPE = factor(activityTYPE))
+    sub1 <- subset(complete_data, subjectID == 1)
+      plot(sub1[, 13], col= sub1$activityID, ylab = names(sub1)[13])
+      plot(sub1[, 14], col = sub1$activityID, ylab = names(sub1)[14])
+        op <- par(cex = .5)  ##changes the font size for the legend of the plot. 
+              legend("topright", legend = unique(sub1$activityTYPE), col = unique(sub1$activityTYPE), pch = 19)
+
+
+```
+
+### EPA Air Quality Example- Fine particulate matter. 
+http://goo.gl/soQZHM
+
+```{r}
+pm0 <- read.table("./data/PM2-5_2000_2019_annual.txt", header = TRUE, sep= "|", na.strings = "NA", fill = TRUE) ##for a read.table, it expects an element in each column, therefore it is crucial to fill = TRUE in order to fill it in, otherwise it won't be read. 
+head(pm0, n= 20)
+    
+library(dplyr)
+    
+    pm0 <- pm0[pm0$year %in% c("2000","2019"), ] ##subsetting the data.frame to include two years only. careful, year is denoted as an integer here. strptime not working well for a conversion. 
+      #names(pm0) <- names(pm0) %>% make.names() ##renames column names due to abundance of spaces. Fills them in with "_". 
+        head(pm0, n=20)
+          
+        ##taking summary view of sample values. 
+        x0 <- pm0$arithmetic_mean
+        summary(x0)
+        str(x0)
+        mean(is.na(x0))
+        
+        ##subsetting the data into two data.frames, and then boxplotting each on same plot. 
+        pm0$year <- as.integer(pm0$year)
+            x2000 <- subset(pm0, pm0$year == 2000)
+            x2019 <- subset(pm0, pm0$year == 2019)
+              boxplot( x2000$arithmetic_mean, x2019$arithmetic_mean, col="blue", pch = 19)
+
+              
+              
+## ______________ Drilling down into the data_______________##            
+        negative <- x2000$arithmetic_mean < 0
+        str(negative)
+        sum(negative, na.rm = TRUE)
+        mean(negative, na.rm = TRUE)
+            hist(x2000$arithmetic_mean, xlab = "PM2.5 (micrograms/cubic meter)")  ##getting a view of the data
+            site2000 <- unique(subset(x2000, state_code == 36, c(county_code, si_id))) ##returns two column data.frame unique to the state, and showing county and site id's. 
+              head(site2000)
+              site2000 <- paste(site2000[,1], site2000[,2], sep = ".")  ##pasting together string/number from col 1 to col 2, returning a "number.number" that is the combination of the two. 
+        
+        negative2 <- x2019$arithmetic_mean < 0
+        str(negative)
+        sum(negative, na.rm = TRUE)
+        mean(negative, na.rm = TRUE)
+            hist(x2019$arithmetic_mean, xlab = "PM2.5 (micrograms/cubic meter)")
+            site2019 <- unique(subset(x2019, state_code == 36, c(county_code, si_id))) ##returns two column data.frame unique to the state, and showing county and site id's. 
+              head(site2019)
+              site2019 <- paste(site2019[,1], site2019[,2], sep = ".")
+                  both <- intersect(site2019, site2000)  ##here- looks at the county, and site monitors that were present in both 2000 and 2019, and the return shows that there were 7. 
+                  str(both)
+                  
+                  x2000$county_site <- with(x2000, paste(county_code, si_id, sep = ".")) ##creating new columns that are the combo of county and site (from above)
+                  x2019$county_site <- with(x2019, paste(county_code, si_id, sep = "."))
+
+                      ct2000 <- subset(x2000, state_code == 36 & county_site %in% both)
+                      ct2019 <- subset(x2019, state_code == 36 & county_site %in% both)
+                      
+                      sapply(split(ct2000, ct2000$county_site), nrow) ## if these were not annual averages, but a collection of dates and n number of observations, the sapply on the split would show us how many observations we had per  station in "both".
+                      sapply(split(ct2019, ct2019$county_site), nrow)
+```
+                      
+                      
+### EPA Air Quality Example #2- PM2.5
+
+```{r}
+key <- readRDS("Source_Classification_Code.rds")
+data0 <- readRDS("summarySCC_PM25.rds")
+    head(key, n=20)
+    head(data0, n=20)
+        str(key)
+        str(data0)
+            summary(data0)
+            
+
+library(plotrix)  ##allows us to have a break in the 
+with(data0, gap.plot(year, Emissions, gap=c(10,100), col= year, pch = 1, ylim = c(-1, 200), xlab = "Year", ylab = "Emissions", main ="Emissions over time- USA"))
+    legend("topright", pch = 1, col = unique(data0$year), legend = unique(data0$year))
+    model <- lm(Emissions ~ year, data0) ##creating a liner model between two variables
+    abline(model, col = "purple", lty = 2)
+        scipen = 5   ##for turning off scientific notation. 
+        dev.copy(png, file = "plot1.png")
+        dev.off()
+        
+        
+data1 <- subset(data0, fips == "24510")
+with(data1, gap.plot(year, Emissions, gap=c(10,100), col= year, pch = 1, ylim = c(-1, 200), xlab = "Year", ylab = "Emissions", main ="Emissions over time- Baltimore City"))
+    legend("topright", pch = 1, col = unique(data1$year), legend = unique(data1$year))
+    model <- lm(Emissions ~ year, data1) ##creating a liner model between two variables
+    abline(model, col = "purple", lty = 2)
+        scipen = 5   ##for turning off scientific notation. 
+        dev.copy(png, file = "plot2.png")
+        dev.off()
+
+
+        
+ ###________________________        
+library(ggplot2)   
+data2 <- subset(data0, fips == "24510" & type == "POINT")
+data3 <- subset(data0, fips == "24510" & type == "NONPOINT")
+data4 <- subset(data0, fips == "24510" & type == "ON-ROAD")
+data5 <- subset(data0, fips == "24510" & type == "NON-ROAD")
+
+library(RColorBrewer)
+    cols <- brewer.pal(6, "RdYlGn")  ##brewer.pal the only useful argument in this package. colorbrewer.org has the list of available color shchema. 
+    pal <-colorRampPalette(cols)  ##rendering the colors into Ramp Pallete
+    
+  
+g1 <- ggplot(data2, aes(year, Emissions)) 
+p1 <- g1 + geom_point(aes(color = year), size = 4, alpha= 1/2) +   ###assigning a color to a variable requires aes(color = column name), and the alpha is the transparency, size is just that. 
+          theme_classic(base_family = "Times", base_size = 9) + ##changes the base font for the entire plot        
+            scale_fill_brewer(palette = "RdYlBu") +  ##attempt to use brewer color schemes... doesn't seem to work. 
+            geom_smooth(size = 1.5, linetype = 6, color = "orange", method = "lm") + 
+            xlab("Year") + ##labels the x axis
+            ylab("Emissions") +
+            ggtitle("Baltimore City Emissions by 'POINT'") +
+            ylim(-1, 30)
+
+g2 <- ggplot(data3, aes(year, Emissions)) 
+p2 <- g2 + geom_point(aes(color = year), size = 4, alpha= 1/2) +   ###assigning a color to a variable requires aes(color = column name), and the alpha is the transparency, size is just that. 
+          theme_classic(base_family = "Times", base_size = 9) + ##changes the base font for the entire plot        
+            scale_fill_brewer(palette = "RdYlBu") +  ##attempt to use brewer color schemes... doesn't seem to work. 
+            geom_smooth(size = 1.5, linetype = 6, color = "orange", method = "lm") + 
+            xlab("Year") + ##labels the x axis
+            ylab("Emissions") +
+            ggtitle("Baltimore City Emissions by 'NONPOINT'") +
+            ylim(-1, 30)
+
+g3 <- ggplot(data4, aes(year, Emissions)) 
+p3 <- g3 + geom_point(aes(color = year), size = 4, alpha= 1/2) +   ###assigning a color to a variable requires aes(color = column name), and the alpha is the transparency, size is just that. 
+          theme_classic(base_family = "Times", base_size = 9) + ##changes the base font for the entire plot        
+            scale_fill_brewer(palette = "RdYlBu") +  ##attempt to use brewer color schemes... doesn't seem to work. 
+            geom_smooth(size = 1.5, linetype = 6, color = "orange", method = "lm") + 
+            xlab("Year") + ##labels the x axis
+            ylab("Emissions") +
+            ggtitle("Baltimore City Emissions by 'ONROAD'") +
+            ylim(-1, 30)
+
+g4 <- ggplot(data5, aes(factor(year), Emissions)) 
+p4 <- g4 + geom_point(aes(color = year), size = 4, alpha= 1/2) +   ###assigning a color to a variable requires aes(color = column name), and the alpha is the transparency, size is just that. 
+          theme_classic(base_family = "Times", base_size = 9) + ##changes the base font for the entire plot        
+            scale_fill_brewer(palette = "RdYlBu") +  ##attempt to use brewer color schemes... doesn't seem to work. 
+            geom_smooth(size = 1.5, linetype = 6, color = "orange", method = "lm", na.rm= TRUE) + 
+            xlab("Year") + ##labels the x axis
+            ylab("Emissions") +
+            ggtitle("Baltimore City Emissions by 'NONROAD'") +
+            ylim(-1, 30)
+library(cowplot)
+
+plot_grid(p1, p2, p3, p4, labels= "", ncol=2, nrow=2)
+dev.copy(png, file = "plot3.png")
+        dev.off()
+        
+#####___________ Alternative ggplot
+data1 <- subset(data0, fips == "24510") ##subset for baltimore
+agdata1 <- aggregate(Emissions ~ year, data1, sum)  ##not taht important for this plot.
+gg1 <- ggplot(data1, aes(factor(year), Emissions, fill=type)) ##type is a categorical variable/column header. 
+gp1 <- gg1 + geom_bar(stat="identity") + ##identity leave the data unchanged. The default is to count
+      theme_bw() +
+      guides(fill = "none") + ##gets rid of the legend on the right side. 
+      facet_grid(.~type, scales = "free", space = "free")+  ##grid is organized by "." or everything, by type(non-road, etc...). Separates 4, 4-olored columns into four grids, each with 4 colors. 
+      xlab("Year") + ##labels the x axis
+      ylab("Emissions")+
+      ggtitle("PM2.5 Emissions, Baltimore City")
+
+gp1
+  
+  
+  
+  
+        
+        library(plotrix)  ##allows us to have a break in the
+        library(data.table)
+        library(dplyr)
+      data6 <- left_join(data0, key, by = "SCC")
+data7 <- data6[data6$SCC.Level.Three %like% "coal", ]
+with(data7, gap.plot(year, Emissions, gap=c(100,200), col= year, pch = 1, ylim = c(-1, 300), xlab = "Year", ylab = "Emissions", main ="Coal Use over time- USA"))
+    legend("topright", pch = 1, col = unique(data6$year), legend = unique(data6$year))
+    model <- lm(Emissions ~ year, data7) ##creating a liner model between two variables
+    abline(model, col = "purple", lty = 2)
+        scipen = 5   ##for turning off scientific notation. 
+        dev.copy(png, file = "plot4.png")
+        dev.off()
+        
+        
+        
+        library(plotrix)  ##allows us to have a break in the
+        library(data.table)
+        library(dplyr)
+        par(mfrow = c(1,1))
+data6 <- left_join(data0, key, by = "SCC")
+  data8 <- subset(data6, fips == "24510" & SCC.Level.One == "Internal Combustion Engines")
+      with(data8, plot(year, Emissions, col= year, pch = 1, cex = 3, xlab = "Year", ylab = "Emissions", main ="Combusion Engine Part. over time- Maryland City"))  ##cex changes the size of the points. 
+          legend("topright", pch = 1, col = unique(data8$year), legend = unique(data8$year))
+          model <- lm(Emissions ~ year, data8) ##creating a liner model between two variables
+              abline(model, col = "purple", lty = 2)
+                scipen = 5   ##for turning off scientific notation. 
+                dev.copy(png, file = "plot5.png")
+                dev.off()
+                
+          par(mfrow = c(2,1))
+                data6 <- left_join(data0, key, by = "SCC")
+  data9 <- subset(data6, fips == ("24510") & SCC.Level.One == "Internal Combustion Engines")
+      with(data9, plot(year, Emissions, col= fips, pch = 1, xlab = "Year", ylab = "Emissions", main ="Combusion Engine Part. Maryland City"))
+          legend("topright", pch = 1, col = unique(data9$fips), legend = unique(data9$fips))
+          model <- lm(Emissions ~ year, data9) ##creating a liner model between two variables
+          abline(model, col = "purple", lty = 2)
+                scipen = 5
+ 
+   data10 <- subset(data6, fips == ("06037") & SCC.Level.One == "Internal Combustion Engines")
+      with(data10, plot(year, Emissions, col= fips, pch = 1, xlab = "Year", ylab = "Emissions", main ="Combusion Engine Part. LA County"))
+          legend("topright", pch = 1, col = unique(data10$fips), legend = unique(data10$fips))
+          model <- lm(Emissions ~ year, data10)
+              abline(model, col = "orange", lty = 2)
+                scipen = 5   ##for turning off scientific notation. 
+                
+                dev.copy(png, file = "plot6.png")
+                dev.off()
+                
+```
+
+
+
+                      

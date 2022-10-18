@@ -1,25 +1,102 @@
 ---
 title: "Statistics, Modeling, and Machine Learning"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 ---
 
-##Reproducibility
+## Reproducibility
 
 Steps of data analysis:
   -Define the question
+  
   -Define the ideal data set
+  
   -Determine what data you can access
+  
   -Obtain the data
+  
   -Clean the Data
+  
   -Exploratory data analysis
+  
   -Statistical prediction/Modeling
+  
   -Interpret results
+  
   -Challenge  results
+  
   -Synthesize/Write up results
+  
   -Create reproducible code
-```{r echo=FALSE}
- 
+  
+## Probability
+  
+  P(A u B) = P(A) + P(B)   - The probability of the union between scenario A and B is simply the sum of each.
+  Random variable = is the numerical outcome of an experiment (discrete or continuous)
+      - e.g. the flip of a coin (discrete random variable)
+      - e.g. the roll of a dice (also discrete random variable because it's limited to 1-6)
+      - e.g. BMI of a person is a continuous random variable
+  
+      For random variables, the probabilities must add  up to 1, and components are larger or equal to 0. 
+        Probability mass function - for discrete random variables
+        Probability density function - for continuous random variables
+            in R, probability of some instance occurring within a continuous distribution can be calculated by using pbeta(). Here, p before an argument represents "probability". q before an argument represents "quantile"
+            Conditional probability- think lightning strike on a storming vs. sunny day. 
+                P(A|B) = P(A u B)/P(B) is the conditional probability. Written as the probability of A given condition B = ....
+                
+mean = center of a distribution
+variance and standard deviations = how spread out the distribution is
+
+```{r }
+ ## Beta distribution
+pbeta(0.75, 2, 1) ##here 0.75 is 75% probability of some density.
+pbeta(c(.4, .5, .6), 2, 1) ##40-60% probability example of the same density.
+
+pnorm(70, mean = 80, sd = 10) ## probability to have value 70 given a set mean and standard dev. Data is normally distributed. 
+qnorm(0.95, mean=1100, sd = 75) ## will return a value of a normal distribution given a specificed percentile (95%), and a known mean and st.dev. 
+
+pnorm(16, mean = 15, sd = 1) - pnorm(14, mean = 15, sd = 1) ##probaility that a an output is between two known values, i.e. 14 and 16
+
+ppois(10, lambda = 15) ##poisson distributed data. Probability of seeing 10 or less of an instance, where lamda represents 3 hours,l and 5 people per hour, hence 15. 
+
 ```
+
+```{r galton, fig.height=6,fig.width=12, fig.align='center', echo = FALSE, message =FALSE, warning=FALSE}
+library(UsingR); data(galton); library(ggplot2)
+library(reshape2)
+longGalton <- melt(galton, measure.vars = c("child", "parent"))
+g <- ggplot(longGalton, aes(x = value)) + geom_histogram(aes(y = ..density..,  fill = variable), binwidth=1, colour = "black") + geom_density(size = 2)
+g <- g + facet_grid(. ~ variable)
+g
+```
+
+
+```{r}
+library(manipulate)
+myHist <- function(mu){
+    g <- ggplot(galton, aes(x = child))
+    g <- g + geom_histogram(fill = "salmon", 
+      binwidth=1, aes(y = ..density..), colour = "black")
+    g <- g + geom_density(size = 2)
+    g <- g + geom_vline(xintercept = mu, size = 2)
+    mse <- round(mean((galton$child - mu)^2), 3)  
+    g <- g + labs(title = paste('mu = ', mu, ' MSE = ', mse))
+    g
+}
+manipulate(myHist(mu), mu = slider(62, 74, step = 0.5))
+```
+
+```{r }
+    g <- ggplot(galton, aes(x = child))
+    g <- g + geom_histogram(fill = "salmon", 
+      binwidth=1, aes(y = ..density..), colour = "black")
+    g <- g + geom_density(size = 2)
+    g <- g + geom_vline(xintercept = mean(galton$child), size = 2)
+    g
+```
+ 
+## Variance
+
 

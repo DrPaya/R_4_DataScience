@@ -73,20 +73,7 @@ g
 ```
 
 
-```{r}
-library(manipulate)
-myHist <- function(mu){
-    g <- ggplot(galton, aes(x = child))
-    g <- g + geom_histogram(fill = "salmon", 
-      binwidth=1, aes(y = ..density..), colour = "black")
-    g <- g + geom_density(size = 2)
-    g <- g + geom_vline(xintercept = mu, size = 2)
-    mse <- round(mean((galton$child - mu)^2), 3)  
-    g <- g + labs(title = paste('mu = ', mu, ' MSE = ', mse))
-    g
-}
-manipulate(myHist(mu), mu = slider(62, 74, step = 0.5))
-```
+
 
 ```{r }
     g <- ggplot(galton, aes(x = child))
@@ -97,6 +84,716 @@ manipulate(myHist(mu), mu = slider(62, 74, step = 0.5))
     g
 ```
  
-## Variance
+## Variance = Total sum of squares
 
+```{r}
+lambda <- 0.2 
+nsim <- 1:1000 # Number of Simulations/rows
+n <- 40 
+
+Ematrix <- data.frame(x = sapply(nsim, function(x) {mean(rexp(n, lambda))})) ##creating a matrix of values
+head(Ematrix)
+
+Smean <- apply(Ematrix, 2, mean) ## calculating the simulated mean from above matrix.
+Smean
+
+Tmean <- 1/lambda  ##calculating the theoretical mean given lambda
+Tmean
+
+SSD <- sd(Ematrix$x)  ##The simulated standard deviation
+SSD
+
+SVar <- var(Ematrix$x)  ##The simulated variance from the above matrix.
+SVar
+
+TSD <- (1/lambda)/sqrt(n)  ##The theoretical standard deviation.
+TSD
+
+TVar <- TSD^2   ##The theoretical calculation for the Variance
+TVar
+```
+
+
+## t-test
+
+  (X - X*)/(s/sqrt(n)) in other words, sample mean minus the hypothesized/test mean or value divided by standard error of the mean divided by square root of sample size, n. This follows a t-distribution with n-1 degrees of freedom. You can calculate the T-distribution using qt(.95, 15), where .95 is the percentile or an alpha of 0.05, and 15 is n-1 in this example. 
+
+```{r}
+library(UsingR); data(father.son)
+t.test(father.son$sheight - father.son$fheight)  ##testing whether there are significant differences between the two columns, one for father height and one for son's height. 
+
+library(datasets)
+data(ToothGrowth)
+head(ToothGrowth)
+
+library(ggplot2)
+
+plot0 <- ggplot(ToothGrowth, aes(supp, len, fill = supp))
+plot1 <- plot0 + geom_dotplot(binaxis ="y") +
+      facet_grid(.~ dose) 
+      plot1
+
+t.test(len ~ supp, data = ToothGrowth) ##testing sig difference between supp types and length
+
+test1 <- subset(ToothGrowth, dose %in% c(.5,1)) ##subsetting doses to make pairwise comparisons
+t.test(len ~ dose, data = test1) ##testing sig differences between discrete doses and length
+
+test2 <- subset(ToothGrowth, dose %in% c(1,2)) ##subsetting doses to make pairwise comparisons
+t.test(len ~ dose, data = test2)
+
+```
+
+## t-test Confidence Interval
+```{r}
+## Prompt for below: a sample of 9 men yielded a sample average brain volume of 1,100cc and a standard deviation of 30cc. What is a 95% Student’s T confidence interval for the mean brain vol
+mn = 1100
+s = 30
+n = 9
+round(1100 + c(-1,1)*qt(.975, df = 8)*s/sqrt(n))
+
+## diet pill is given to 9 subjects over six weeks. The average difference in weight (follow up - baseline) is -2 pounds. What would the standard deviation of the difference in weight have to be for the upper endpoint of the 95% T confidence interval to touch 0?
+n = 9
+mn_dif = 2
+t = .95
+(y_d <- round(mn_dif*sqrt(n) / qt(.975, df = 8), 2))
+```
+
+
+## Two sample t-test
+```{r}
+
+##Running a two-sample t-test
+data(ChickWeight); library(reshape2)
+wideCW <- dcast(ChickWeight, Diet + Chick ~ Time, value.var = "weight") ##dcasting the long-form of the dataset into the wide form by chick, and diet, cast over the time variable, where the represented data is the weight. 
+names(wideCW)[-(1:2)] <- paste( "time", names(wideCW)[-(1:2)], sep= "") ##renames columns after the first row, second column, and pastes "time" before the existing column header. 
+library(dplyr)
+wideCW <- mutate(wideCW, gain = time21-time0)  ##adds a column titled gain, where it subtracts or takes the difference between time 21 and 0, and enters a new column. 
+
+wideCW_14 <- subset(wideCW, Diet %in% c(1,4))
+t.test(gain~Diet, paired = FALSE, var.equal = TRUE, data = wideCW_14)
+```
+
+## P-Values
+```{r}
+pt(2.5, 15, lower.tail = FALSE)  ##the probability of getting a T-statistic of 2.5 (first element of the function), with a a df of 15 (i.e. n-1).
+```
+ 
+## Least Squares (Regression)
+
+Sum[i=1 to n] of [Yi - (Bo +B1Xi)]^2
+Least squares best fit is the sum of i to the n of Yi which is the i'th sample data y-coordinate minus the intercept plus the slope times the i'th sample data x-coordinate, squarred. 
+  Bo = intercept of y-axis
+  B1 = slope
+  Yi = y of sample i
+  Xi = x of sample i
+        Think of it as subtracting the distance between sample's y-coordinate from the best fit, which is y - (ax + b) which is a linear regression of the best fit, or Yi - Yfit. Then square it.
+```{r}
+library(UsingR)
+library(ggplot2)
+
+freqData <- as.data.frame(table(galton$child, galton$parent))
+names(freqData) <- c("child", "parent", "freq")
+freqData$child <- as.numeric(as.character(freqData$child))
+freqData$parent <- as.numeric(as.character(freqData$parent))
+g <- ggplot(filter(freqData, freq > 0), aes(x = parent, y = child))
+g <- g  + scale_size(range = c(2, 20), guide = "none" )
+g <- g + geom_point(colour="grey50", aes(size = freq+5, show_guide = FALSE))
+g <- g + geom_point(aes(colour=freq, size = freq-5))
+g <- g + scale_colour_gradient(low = "lightblue", high="white")                    
+g
+
+
+
+###_____________________Linear Least Squares calculated
+y <- galton$child
+x <- galton$parent
+beta1 <- cor(y, x) *  sd(y) / sd(x)  ##The slope, which is the corelation between y and x times the st.dev of y over the st.dev of x
+beta0 <- mean(y) - beta1 * mean(x) ##calculates the y-intercept of the best fit. 
+rbind(c(beta0, beta1), coef(lm(y ~ x))) ##lm stands for linear model. coef takes the output and gives us coefficients. REMEMBER - y is the outcome, and x is the predictor. 
+##This example gives you the same output, because one is the manual calculation, while the other is done automatically using lm. 
+
+beta1 <- cor(y, x) *  sd(x) / sd(y)  ##if we swapped the predictor 
+beta0 <- mean(x) - beta1 * mean(y)
+rbind(c(beta0, beta1), coef(lm(x ~ y)))  ##shows us the slope is the same
+
+yc <- y - mean(y)
+xc <- x - mean(x)
+beta1 <- sum(yc * xc) / sum(xc ^ 2)
+c(beta1, coef(lm(y ~ x))[2]) ##returns the same slope
+
+###simplified 
+g <- ggplot(filter(freqData, freq > 0), aes(x = parent, y = child))
+g <- g  + scale_size(range = c(2, 20), guide = "none" )
+g <- g + geom_point(colour="grey50", aes(size = freq+5, show_guide = FALSE))
+g <- g + geom_point(aes(colour=freq, size = freq-10))
+g <- g + scale_colour_gradient(low = "lightblue", high="white")  
+g <- g + geom_smooth(method="lm", col ="orange", formula=y~x) ##for fitting the linear best fit to a plot
+g
+```
+
+## Linear Regression for Prediction
+
+```{r} 
+library(UsingR)
+data(diamond)
+library(ggplot2)
+g = ggplot(diamond, aes(x = carat, y = price))
+g = g + xlab("Mass (carats)")
+g = g + ylab("Price (SIN $)")
+g = g + geom_smooth(method = "lm", colour = "black")
+g = g + geom_point(size = 4, colour = "black", alpha=0.5)
+g = g + geom_point(size = 2, colour = "blue", alpha=0.2)
+g
+
+fit <- lm(price~ carat, data = diamond)  ## prints coefficient Bo and B1, slope and intercept
+coef(fit)
+summary(fit) ##gives you the complete statistic
+
+fit2 <- lm(price ~ I(carat - mean(carat)), data=diamond) ##how you mean center your predictor, carat. I function lets you provide a calculation in the predictor argument. 
+coef(fit2)
+
+fit3 <- lm(price ~ I(carat * 10), data=diamond) ##shortcut where fit3 produces the price change for 1/10 a carat, not a complete carat. 
+coef(fit3)
+
+
+newx <- c(0.16, 0.27, 0.34)  ## an example of a list of carat sizes for diamonds, and we want to predict the price. 
+predict(fit, newdata = data.frame(carat = newx))  ##taking original fit data, and calling to the newx concatenated values with the category of carat(carat is what it is referencing). new data is designating new x values.  
+
+```
+
+## Residuals
+
+```{r}
+data(diamond)
+y <- diamond$price; x <- diamond$carat; n <- length(y)
+fit <- lm(y ~ x)
+e <- resid(fit)  ##easiest way to calculate residuals
+yhat <- predict(fit)
+max(abs(e -(y - yhat)))
+max(abs(e - (y - coef(fit)[1] - coef(fit)[2] * x)))  ##will return the same as resid()
+
+
+plot(x, e,  
+     xlab = "Mass (carats)", 
+     ylab = "Residuals (SIN $)", 
+     bg = "lightblue", 
+     col = "black", cex = 2, pch = 21,frame = FALSE)
+abline(h = 0, lwd = 2)
+for (i in 1 : n) 
+  lines(c(x[i], x[i]), c(e[i], 0), col = "red" , lwd = 2)
+
+
+
+
+
+##_______________Example of non-linear data and residuals
+x = runif(100, -3, 3); y = x + sin(x) + rnorm(100, sd = .2); 
+library(ggplot2)
+library(RColorBrewer)
+g = ggplot(data.frame(x = x, y = y), aes(x = x, y = y))
+g = g + geom_smooth(method = "lm", colour = "black")
+g = g + geom_point(size = 7, colour = "black", alpha = 0.4)
+g = g + geom_point(size = 5, colour = "red", alpha = 0.4)
+g
+##_______________
+g = ggplot(data.frame(x = x, y = resid(lm(y ~ x))), ##How to plot residuals
+           aes(x = x, y = y))
+g = g + geom_hline(yintercept = 0, size = 2); 
+g = g + geom_point(size = 7, colour = "black", alpha = 0.4)
+g = g + geom_point(size = 5, colour = "red", alpha = 0.4)
+g = g + xlab("X") + ylab("Residual")
+g
+
+##____________ Calculating the residual and plotting for diamond data
+diamond$e <- resid(lm(price ~ carat, data = diamond))  ##adding a new column into data.frame for residuals
+g = ggplot(diamond, aes(x = carat, y = e))
+g = g + xlab("Mass (carats)")
+g = g + ylab("Residual price (SIN $)")
+g = g + geom_hline(yintercept = 0, size = 2)
+g = g + geom_point(size = 7, colour = "black", alpha=0.5)
+g = g + geom_point(size = 5, colour = "blue", alpha=0.2)
+g
+```
+
+## Predictions
+
+```{r}
+
+fit <- lm(mpg~wt, data= mtcars) ## creating a linear model of mtcars dataset, where weight is the predictor
+predict(fit, wt=3000) ##using the model above, and predicting the mpg for all cars weighing 3000lbs.
+
+```
+
+## Multivariate Regressions
+```{r}
+
+```
+
+## Shapiro Wilks test for Normal distribution 
+```{r}
+data <- rnorm(100)
+
+#perform Shapiro-Wilk test for normality
+shapiro.test(data)  ## where we reject normality when p < 0.05, otherwise we accept that the test data is normally distributed.
+```
+
+# Machine Learning
+
+question - input data - features - algorithm - parameters - evaluation
+
+Prediction has accuracy tradeoffs
+
+In-sample error: the error rate you get on the same data set you used to build your predictor. Sometimes called re-substitution error. 
+Out of sample error: the error rate you get on a new data set, sometimes called generalization error. 
+    Out of sample error is what we should care about
+    In sample error is always less than out of sample error
+        The reason is over-fitting. 
+        True positive vs. false positive, true negative vs. false negative
+          Sensitivity - probability that the test positively predicted, and that the prediction was right
+          Specificity- probability that the test was negative, and so too was the outcome
+  Receiver Operating Characteristic (ROC) - Area under the curve is the measure of goodness of fit (model/prediction to data/outcome). AUC of 0.5 is random guessing. AUC > 0.8 is a good model. 
+  Cross-validation. 
+    1.) use the training set
+    2.) split the training set into a test set and a smaller training set
+    3.) Build a model on the training set
+    4.) Evaluate the model on the test set
+    5.) repeat and average the estimated errors
+        k-fold cross-validation is popular technique. 
+        
+```{r}
+library(kernlab)
+data(spam)
+head(spam)
+
+
+plot(density(spam$your[spam$type=="nonspam"]),
+     col="blue",main="",xlab="Frequency of 'your'")
+lines(density(spam$your[spam$type=="spam"]),col="red")
+abline(v=0.5,col="black")
+
+##We want to find a value C, which is the cutoff point between spam frequencies, and non-spam frequencies of the word "your". If frequency is above C, predict spam...
+
+prediction <- ifelse(spam$your > 0.5,"spam","nonspam")
+table(prediction,spam$type)/length(spam$type)  
+
+```
+
+###Caret for machine learning package
+
+obj Class           Package       Predict Function Syntax
+lda                 MASS          Predict(obj) (no options needed)
+glm                 stats         predict(obj, type = "response")
+bgm                 gbm           predict(obj, type = "response", n.trees)
+mda                 mda           predict(obj, typoe ="posterior")
+rpart               rpart         predict(obj, type=- "prob")
+Weka                RWeka         predict(obj, type= "probability")
+LogitBoost          caTools       predict(obj, type= "raw", nIter)
+
+** Different types of predictors have different object class syntax requirements. 
+
+
+```{r}
+library(caret)
+library(kernlab) ## to get spam dataset
+
+data(spam)
+inTrain <- createDataPartition(y=spam$type, p= 0.75, list = FALSE) ## data is partitioned by spam type, where p is the training proportion. 
+training <- spam[inTrain,]  ##subsetting the output of the partition function by spam
+testing <- spam[-inTrain,]  ##subsetting the output of the partition function by not spam
+dim(training)  ##shows the dimensions of the dataframe
+
+set.seed(11111)
+modelFit <- train(type ~., data= training, method = "glm")  ##training a model, specifically a glm model, where we are comparing column type (spam vs. not spam) with everything ".", and using the subsetted data for training. 
+modelFit
+
+modelFit$finalModel  ##will return the fitted values for all of the other columns of data. The higher the fit, the more likely it's spam. 
+
+predictions <- predict(modelFit, newdata = testing)  ##how we can predict on new samples, here using the subset testing data.frame. 
+predictions
+confusionMatrix(predictions, testing$type)  ##using the confusingMatrix argument to determine how well the predictions are working, and the focus is on predicting type (spam vs. not spam)
+
+```
+
+### Data Slicing with caret
+```{r}
+library(caret)
+library(kernlab) ## to get spam dataset
+
+data(spam)
+inTrain <- createDataPartition(y=spam$type, p= 0.75, list = FALSE) ## data is partitioned by spam type, where p is the training proportion. 
+training <- spam[inTrain,]  ##subsetting the output of the partition function by spam
+testing <- spam[-inTrain,]  ##subsetting the output of the partition function by not spam
+dim(training)
+
+set.seed(11111)
+folds <- createFolds(y= spam$type, k=10, list= TRUE, returnTrain=TRUE)  ##k is the number of folds, smap$type is the column being references. You can return either the Training set, or the test set. 
+sapply(folds, length)
+
+```
+
+## Plotting Predictors + Hmisc for cutting data.frames
+```{r}
+library(ISLR)
+library(ggplot2)
+library(caret)
+
+data(wage)
+summary(Wage)
+head(Wage, n=20)
+
+inTrain <- createDataPartition(y=Wage$wage, p=0.7, list=FALSE)
+training <- Wage[inTrain,]
+testing <- Wage[-inTrain,]
+dim(training); dim(testing)  ##returns the number of rows and columns
+
+featurePlot(x=training[, c("age", "education", "jobclass")], ##a plotting function that comes with caret, and we're taking a subset of the data, three columns in this instance.
+            y= training$wage,  ##this is your output of interest
+            plot="pairs")
+
+qplot(age, wage, data=training) ##here we see two distinct groups
+qplot(age, wage, colour= jobclass, data= training)
+
+qp <- qplot(age, wage, color= education, data=training)
+qp + geom_smooth(method = 'lm', formula= y~x)
+
+library(Hmisc)  ##good library for cutting data.frames into pieces. 
+cutWage <- cut2(training$wage, g=3) ##cut2 argument performs the cut, by $wage column, into g=3 pieces. 
+table(cutWage)
+
+p1 <- qplot(cutWage, age, data=training, fill=cutWage, geom=c("boxplot"))
+p1          
+
+t1 <- table(cutWage, training$jobclass)  ##great way to make quick tables
+t1
+
+prop.table(t1,1)  ##proportion table, where the 1 represents proportion in each row. a 2 would be each column. 
+
+qplot(wage, color=education, data= training, geom="density")
+```
+
+### Pre-processing predictor variables
+```{r}
+library(caret)
+library(kernlab) ## to get spam dataset
+library(RANN)
+
+data(spam)
+inTrain <- createDataPartition(y=spam$type, p= 0.75, list = FALSE) ## data is partitioned by spam type, where p is the training proportion. 
+training <- spam[inTrain,]  ##subsetting the output of the partition function by spam
+testing <- spam[-inTrain,]  ##subsetting the output of the partition function by not spam
+dim(training)
+hist(training$capitalAve, main="", xlab="ave.capital run length")
+mean(training$capitalAve)
+sd(training$capitalAve) ## what we see here is that the standard deviation is significanly higher than the mean, which indicates that we need some pre-processing. 
+
+trainCapAve <- training$capitalAve
+trainCapAveS <- (trainCapAve - mean(trainCapAve))/sd(trainCapAve) ## A way of standardizing the data
+mean(trainCapAveS)
+sd(trainCapAveS)
+
+##If we want to then standardize the test set, we must use the mean from the training set, and the st.dev from the training set. 
+testCapAve <- testing$capitalAve
+testCapAveS <- (testCapAve - mean(trainCapAve))/sd(trainCapAve) 
+mean(testCapAveS)
+sd(testCapAveS)
+
+##Alternative is passing preProcess into the train() argument
+modelFit <- train(type~., data= training, preProcess= c("center", "scale"), method="glm")  ##This processes for all of the predictor variables. 
+modelFit
+
+
+## Prediction models tend to fail with NA. Well use K nearest imputation statistical function. 
+# Make some values NA
+training$capAve <- training$capitalAve
+selectNA <- rbinom(dim(training)[1],size=1,prob=0.05)==1  ## we are adding NA's into the dataset here. 
+training$capAve[selectNA] <- NA
+# Impute and standardize
+preObj <- preProcess(training[,-58],method="knnImpute")  ##removing the 58th column here
+capAve <- predict(preObj,training[,-58])$capAve
+# Standardize true values
+capAveTruth <- training$capitalAve
+capAveTruth <- (capAveTruth-mean(capAveTruth))/sd(capAveTruth)
+
+```
+
+### Covariate (predictor) creation
+```{r}
+ ##think about creating or calculating variables/features to summarize the sample data, in this instance an entire e-mail if we use the spam dataset. 
+
+library(ISLR); library(caret); data(Wage);
+inTrain <- createDataPartition(y=Wage$wage,
+                              p=0.7, list=FALSE)
+training <- Wage[inTrain,]
+testing <- Wage[-inTrain,]
+
+##turning qualitative variables into quantitative ones
+table(training$jobclass)
+dummies <- dummyVars(wage ~ jobclass,data=training)  ##using the dummyVars argument to turn categorical info, such as "industrial" or "information" into integers. Outcome is wage, and jobclass is the predictor.
+head(predict(dummies,newdata=training)) 
+
+##__________________
+##A way to throw out less-meaningful predictors, i.e. near-zero variations in the data. 
+nsv <- nearZeroVar(training,saveMetrics=TRUE)
+nsv  ##in this example we can throw out sex and region
+
+
+```
+
+### Predicting with Regression
+```{r}
+##Using the old faithful dataset
+library(caret);data(faithful); set.seed(333)
+inTrain <- createDataPartition(y=faithful$waiting,
+                              p=0.5, list=FALSE)
+trainFaith <- faithful[inTrain,]; testFaith <- faithful[-inTrain,]
+head(trainFaith)
+
+plot(trainFaith$waiting,trainFaith$eruptions,pch=19,col="blue",xlab="Waiting",ylab="Duration") ##plotting the training data. 
+lm1 <- lm(eruptions ~ waiting, data=trainFaith)
+summary(lm1)
+##output is y(eruption duration) = 0.073 * (waiting time) - 1.792
+
+## To predict a new value, we can automate this by:
+coef(lm1)[1] + coef(lm1)[2]*80  ## coef(lm1)[1] returns the intercept, and [2] returns the slope. We are predicting with a wait time of 80
+
+newdata <- data.frame(waiting=80)
+predict(lm1,newdata)  ## a shortcut so we don't have to continuously calculate the coeficients.
+
+##We can not use the predictions from the training set on the TEST set
+pred1 <- predict(lm1,newdata=testFaith,interval="prediction")
+ord <- order(testFaith$waiting)
+plot(testFaith$waiting,testFaith$eruptions,pch=19,col="blue")
+
+##________________
+##We can use CARET to do the same, and much faster
+modFit <- train(eruptions ~ waiting,data=trainFaith,method="lm")  ##eruptions is outcome, waiting is predictor. model built on the training dataset, and method is linear modeling. 
+summary(modFit$finalModel)  ##How we get final model output
+
+```
+
+### Predicting Multiple Covariate Regression
+```{r}
+library(ISLR); library(ggplot2); library(caret);
+data(Wage); Wage <- subset(Wage,select=-c(logwage))  ##here we are subsetting and removing the variable we are trying to predict
+summary(Wage)
+
+
+
+inTrain <- createDataPartition(y=Wage$wage,##subsetting into test and train
+                              p=0.7, list=FALSE)
+training <- Wage[inTrain,]
+testing <- Wage[-inTrain,]
+dim(training); dim(testing)
+
+
+featurePlot(x=training[,c("age","education","jobclass")],
+            y = training$wage,
+            plot="pairs")
+
+##________________
+
+modFit<- train(wage ~ age + jobclass + education,
+               method = "lm",data=training)
+finMod <- modFit$finalModel
+print(modFit)
+
+
+plot(finMod,1,pch=19,cex=0.5,col="#00000010")  ##residuals vs. fitted. We want to see a straight line
+qplot(finMod$fitted,finMod$residuals,colour=race,data=training)  ##also fitted vs. residuals. Trying to identify different trends here. 
+
+
+
+```
+
+### Predicting with Trees
+Better performance in non-linear settings
+Can cause over-fitting, so be careful 
+Considered non-linear models, so they use interactions between variables
+
+1.) start with all variables in one group
+2.) Find the variable/split that best separates the outcomes
+3.) Divide the data into two groups "leaves" on that node
+4.) Within each split, find the best variable/split that separates the outcomes
+5.) Continue until the groups are too small or sufficiently "pure"
+```{r}
+data(iris); library(ggplot2)
+names(iris)
+table(iris$Species)
+
+
+inTrain <- createDataPartition(y=iris$Species,
+                              p=0.7, list=FALSE)
+training <- iris[inTrain,]
+testing <- iris[-inTrain,]
+dim(training); dim(testing)
+
+qplot(Petal.Width,Sepal.Width,colour=Species,data=training)
+
+library(caret)
+modFit <- train(Species ~ .,method="rpart",data=training) ##train function fits the model here. looking at "." or everything as predictors, and species is the outcome, method = r's package for regression/classification. 
+print(modFit$finalModel)
+
+plot(modFit$finalModel, uniform=TRUE, 
+      main="Classification Tree")
+text(modFit$finalModel, use.n=TRUE, all=TRUE, cex=.8)  ##plotting the dendogram tree
+
+library(rattle)
+fancyRpartPlot(modFit$finalModel)  ##makes a fancier version of the same dendogram
+```
+
+### Bootstrap-aggregating "Bagging"
+Re-sample the data, and recalculate predictions, then average or majority vote.
+Useful for non-linear functions
+When using bagging in caret, consider using "bagEarth", "treebag", "bagFDA" inside of the train function. 
+
+Below is the syntax/code, but ozone dataset not available
+predictors = data.frame(ozone=ozone$ozone)
+temperature = ozone$temperature
+treebag <- bag(predictors, temperature, B = 10,
+                bagControl = bagControl(fit = ctreeBag$fit,
+                                        predict = ctreeBag$pred,
+                                        aggregate = ctreeBag$aggregate))
+
+
+### Random Forests
+1.) Bootstrap samples
+2.) at each split, bootstrap the variables again
+3.) Grow multiple trees and vote
+Cons- prone to overfitting, but it is very accurate
+```{r}
+data(iris); library(ggplot2); library(randomForest); library(caret)
+inTrain <- createDataPartition(y=iris$Species,
+                              p=0.7, list=FALSE)
+training <- iris[inTrain,]
+testing <- iris[-inTrain,]
+
+
+modFit <- train(Species~ .,data=training,method="rf",prox=TRUE)  ##using train, here method is "rf", which stands for random forest. Outcome is species, and predictors are every other variable. 
+modFit
+
+getTree(modFit$finalModel,k=2) ##to view the individual trees, you can use this function, which is looking at model 2
+
+
+irisP <- classCenter(training[,c(3,4)], training$Species, modFit$finalModel$prox)  ##This centers your class predictions, which will be used in the plot below
+irisP <- as.data.frame(irisP); irisP$Species <- rownames(irisP)
+p <- qplot(Petal.Width, Petal.Length, col=Species,data=training)
+p + geom_point(aes(x=Petal.Width,y=Petal.Length,col=Species),size=5,shape=4,data=irisP)
+
+
+pred <- predict(modFit,testing); testing$predRight <- pred==testing$Species
+table(pred,testing$Species)
+
+qplot(Petal.Width,Petal.Length,colour=predRight,data=testing,main="newdata Predictions")
+```
+
+### Boosting
+1.) Takes a lot of weak predictors
+2.) Weight them and add them up
+3.) Get a stronger predictor
+```{r}
+library(ISLR); data(Wage); library(ggplot2); library(caret);
+Wage <- subset(Wage,select=-c(logwage))  ##removes the variable were interested in
+inTrain <- createDataPartition(y=Wage$wage,
+                              p=0.7, list=FALSE)
+training <- Wage[inTrain,]; testing <- Wage[-inTrain,]
+
+modFit <- train(wage ~ ., method="gbm",data=training,verbose=FALSE)  ## "gbm" is boosting with trees using the train function from caret. 
+print(modFit)  
+
+qplot(predict(modFit,testing),wage,data=testing)
+```
+
+## Practical Example 1
+1. Subset the data to a training set and testing set based on the Case variable in the data set.  
+2. Set the seed to 125 and fit a caret model with the rpart method using all predictor variables and default caret settings.  
+3. In the final model what would be the final model prediction for cases with the following variable values:  
+  a. TotalIntench2 = 23,000; FiberWidthCh1 = 10; PerimStatusCh1 = 2.  
+  b. TotalIntench2 = 50,000; FiberWidthCh1 = 10; VarIntenCh4 = 100.  
+  c. TotalIntench2 = 57,000; FiberWidthCh1 = 8; VarIntenCh4 = 100.  
+  d. FiberWidthCh1 = 8; VarIntenCh4 = 100;  PerimStatusCh1 = 2. 
+```{r}
+library(rattle)
+library(AppliedPredictiveModeling) 
+data(segmentationOriginal)
+seg1 <- segmentationOriginal
+head(seg1, n=20)
+
+set.seed(125)
+
+# split train and test
+library(dplyr)
+training <- dplyr::filter(seg1, Case =="Train")
+testing <- dplyr::filter(seg1, Case =="Test")
+
+# fit CART model with rpart
+fit <- train(Class ~ ., method="rpart", data=training)
+
+fit$finalModel  
+
+
+fancyRpartPlot(fit$finalModel)  ##fancy version, but requires a method of rpart to plot it.
+```
+### Practical example 2
+```{r}
+# Set seed for reproducibility
+set.seed(1111)
+
+## Data processing- In this section the data is downloaded and manipulated. Some basic transformations and cleanup will be performed, so that `NA` values are omitted. 
+
+training   <-read.csv("./data/pml-training.csv", na.strings=c("NA","#DIV/0!", "")) ##Cleaning
+testing <-read.csv("./data/pml-testing.csv", na.strings=c("NA", "#DIV/0!", ""))
+training<-training[,colSums(is.na(training)) == 0]
+testing <-testing[,colSums(is.na(testing)) == 0]
+
+training   <-training[,-c(1:7)]  ##Subset for just the columns of interest. 
+testing <-testing[,-c(1:7)]
+
+
+# Cross-validation: In this section cross-validation will be performed by splitting the training data in training (75%) and testing (25%) data.
+library(caret)
+subSamples <- createDataPartition(y=training$classe, p=0.75, list=FALSE)
+subTraining <- training[subSamples, ] 
+subTesting <- training[-subSamples, ]
+
+
+library(ggplot2) ##some exploration
+p1 <- ggplot(subTraining, aes(classe))
+plot <- p1 + geom_boxplot()
+plot
+
+## Prediction models: In this section a decision tree and random forest will be used on the data.
+library(rattle)
+# Fit model
+modFitDT <- train(classe ~ ., method="rpart", data=subTraining)
+# Perform prediction
+predictDT <- predict(modFitDT, subTesting, type = "prob")
+# Plot result
+
+fancyRpartPlot(modFitDT$finalModel)
+
+
+##This Random forest takes 1.5hrs to run, be careful!!!!!!!!!
+# Fit model
+library(caret)
+library(randomForest)
+modFit <- train(classe~ .,data=subTraining,method="rf")  
+modFit
+
+gTree <- getTree(modFit$finalModel,k=3) ##to view the individual trees, you can use this function, which is looking at model 3
+head(gTree, n=30)
+
+predictRF <- predict(modFit, subTesting, type = "prob")
+
+# Perform prediction
+predicts <- predict(modFit, testing, type="prob")
+predicts
+```
+
+
+
+### Forecasting
+Traditionally independent variable over TIME
+```{r}
+
+```
 
